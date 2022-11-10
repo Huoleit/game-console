@@ -1,0 +1,10 @@
+{
+  "stm32-for-vscode.openOCDPath": false,
+  "stm32-for-vscode.armToolchainPath": "/usr/bin",
+  "files.associations": {
+    "gpio.h": "c",
+    "main.h": "c",
+    "cmsis_os.h": "c",
+    "lcd.h": "c"
+  }
+}
