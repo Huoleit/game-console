@@ -40,6 +40,11 @@ void DISPLAY_draw_paddle(int x, int y, int width, int height, int color) {
   currentPaddle.valid = 1;
 }
 
+void DISPLAY_game_over() {
+  LCD_Clear(0, 0, 240, 320, BACKGROUND);
+  LCD_DrawString(80, 160, "Game Over");
+}
+
 void DISPLAY_update() {
   if (currentBall.valid) {
     if (lastBall.valid) {

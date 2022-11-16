@@ -195,21 +195,31 @@ void displayFunc(void const *argument) {
     }
 
     GAME_update(&_game, (float)xTaskGetTickCount() / 1000.0f);  // s
+    switch (GAME_get_state(&_game)) {
+      case GAME_STATE_INIT:
+        break;
+      case GAME_STATE_PLAY:
+        GAME_get_ball(&_game, &ball_x, &ball_y, &ball_radius, &ball_color);
+        GAME_get_paddle(&_game, &paddle_x, &paddle_y, &paddle_width,
+                        &paddle_height);
+        DISPLAY_draw_ball(ball_x, ball_y, ball_radius, ball_color);
+        DISPLAY_draw_paddle(paddle_x, paddle_y, paddle_width, paddle_height,
+                            WHITE);
 
-    GAME_get_ball(&_game, &ball_x, &ball_y, &ball_radius, &ball_color);
-    GAME_get_paddle(&_game, &paddle_x, &paddle_y, &paddle_width,
-                    &paddle_height);
-    DISPLAY_draw_ball(ball_x, ball_y, ball_radius, ball_color);
-    DISPLAY_draw_paddle(paddle_x, paddle_y, paddle_width, paddle_height, WHITE);
-
-    DISPLAY_update();
+        DISPLAY_update();
+        break;
+      case GAME_STATE_OVER:
+        DISPLAY_game_over();
+        break;
+    }
 
     osDelay(34);
   }
   /* USER CODE END displayFunc */
 }
 
-/* Private application code --------------------------------------------------*/
+/* Private application code
+ * --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */

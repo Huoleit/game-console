@@ -11,6 +11,7 @@
     "game.h": "c",
     "ascii.h": "c",
     "display.h": "c",
-    "math.h": "c"
+    "math.h": "c",
+    "stdlib.h": "c"
   }
 }

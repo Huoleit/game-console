@@ -28,6 +28,8 @@ struct GameBoard {
     float speed;
   } paddle;
 
+  enum GAME_State state;
+
   float lastTime;
 } GameBoard;
 
@@ -64,45 +66,7 @@ static struct Boundary init_boundary(float u, float v, float x, float y) {
   return b;
 }
 
-void GAME_init(struct GameBoard* board, int width, int height) {
-  board->width = width;
-  board->height = height;
-
-  board->ball.x = width / 2;
-  board->ball.y = height / 2;
-  board->ball.radius = 5;
-  board->ball.color = WHITE;
-
-  board->ball.dx = 200;
-  board->ball.dy = 150;
-
-  board->paddle.x = width / 2;
-  board->paddle.hight = 10;
-  board->paddle.width = 50;
-
-  board->lastTime = 0;
-
-  board->boundaries = _boundaries;
-  board->boundaryCount = 4;
-  board->boundaries[0] = init_boundary(1, 0, 0, 0);
-  board->boundaries[1] = init_boundary(0, 1, 0, 0);
-  board->boundaries[2] = init_boundary(-1, 0, width, 0);
-  board->boundaries[3] = init_boundary(0, -1, 0, height);
-}
-
-void GAME_set_paddle_speed(struct GameBoard* board, float speed) {
-  board->paddle.speed = speed;
-}
-
-void GAME_update(struct GameBoard* board, float curTime) {
-  if (board->lastTime == 0) {
-    board->lastTime = curTime;
-    return;
-  }
-
-  float dt = curTime - board->lastTime;
-  board->lastTime = curTime;
-
+static void game_loop(struct GameBoard* board, float dt) {
   // Ball
   float x = board->ball.x + board->ball.dx * dt;  // intermediate pos
   float y = board->ball.y + board->ball.dy * dt;
@@ -153,9 +117,9 @@ void GAME_update(struct GameBoard* board, float curTime) {
   if (board->ball.y < 0) {
     board->ball.y = 0;
   }
-  if (board->ball.y > board->height) {
-    board->ball.y = board->height;
-  }
+  // if (board->ball.y > board->height) {
+  //   board->ball.y = board->height;
+  // }
 
   // Paddle
   board->paddle.x += board->paddle.speed * dt;
@@ -179,6 +143,64 @@ void GAME_update(struct GameBoard* board, float curTime) {
   }
 }
 
+void GAME_init(struct GameBoard* board, int width, int height) {
+  board->width = width;
+  board->height = height;
+
+  board->ball.x = width / 2;
+  board->ball.y = height / 2;
+  board->ball.radius = 5;
+  board->ball.color = WHITE;
+
+  board->ball.dx = 200;
+  board->ball.dy = 150;
+
+  board->paddle.x = width / 2;
+  board->paddle.hight = 10;
+  board->paddle.width = 50;
+
+  board->boundaries = _boundaries;
+  board->boundaryCount = 3;
+  board->boundaries[0] = init_boundary(1, 0, 0, 0);       // Left
+  board->boundaries[1] = init_boundary(0, 1, 0, 0);       // Top
+  board->boundaries[2] = init_boundary(-1, 0, width, 0);  // Right
+  // board->boundaries[3] = init_boundary(0, -1, 0, height);  // Bottom
+
+  board->lastTime = 0;
+
+  board->state = GAME_STATE_PLAY;
+}
+
+void GAME_set_paddle_speed(struct GameBoard* board, float speed) {
+  board->paddle.speed = speed;
+}
+
+void GAME_update(struct GameBoard* board, float curTime) {
+  if (board->lastTime == 0) {
+    board->lastTime = curTime;
+    return;
+  }
+
+  float dt = curTime - board->lastTime;
+  board->lastTime = curTime;
+
+  switch (board->state) {
+    case GAME_STATE_INIT:
+      break;
+    case GAME_STATE_PLAY:
+      game_loop(board, dt);
+      if (board->ball.y > board->height) {
+        board->state = GAME_STATE_OVER;
+      }
+      break;
+    case GAME_STATE_OVER:
+      board->state = GAME_STATE_INIT;
+      break;
+    default:
+      break;
+  }
+}
+
 // get the position of ball
 void GAME_get_ball(struct GameBoard* board, int* x, int* y, int* radius,
                    uint32_t* color) {
@@ -196,3 +218,6 @@ void GAME_get_paddle(struct GameBoard* board, int* x, int* y, int* width,
   *width = board->paddle.width;
   *height = board->paddle.hight;
 }
+
+// get the state of game
+int GAME_get_state(struct GameBoard* board) { return board->state; }
