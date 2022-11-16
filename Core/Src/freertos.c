@@ -50,6 +50,7 @@
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 osThreadId HeartbeatHandle;
+osThreadId displayHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -58,6 +59,7 @@ osThreadId HeartbeatHandle;
 
 void StartDefaultTask(void const *argument);
 void heartBeat(void const *argument);
+void displayFunc(void const *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -115,6 +117,10 @@ void MX_FREERTOS_Init(void) {
   osThreadDef(Heartbeat, heartBeat, osPriorityLow, 0, 128);
   HeartbeatHandle = osThreadCreate(osThread(Heartbeat), NULL);
 
+  /* definition and creation of display */
+  osThreadDef(display, displayFunc, osPriorityNormal, 0, 128);
+  displayHandle = osThreadCreate(osThread(display), NULL);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -135,12 +141,12 @@ void StartDefaultTask(void const *argument) {
   for (;;) {
     TickType_t curTick = xTaskGetTickCount();
 
-    sprintf(str, "%10lu", curTick);
-    LCD_DrawString(20, 20, str);
+    // sprintf(str, "%10lu", curTick);
+    // LCD_DrawString(20, 20, str);
 
-    sprintf(str, "%10lu", curTick - lastTick);
-    LCD_DrawString(20, 50, str);
-    lastTick = xTaskGetTickCount();
+    // sprintf(str, "%10lu", curTick - lastTick);
+    // LCD_DrawString(20, 50, str);
+    // lastTick = xTaskGetTickCount();
 
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
     osDelay(200);
@@ -164,6 +170,32 @@ void heartBeat(void const *argument) {
     osDelay(500);
   }
   /* USER CODE END heartBeat */
+}
+
+/* USER CODE BEGIN Header_displayFunc */
+/**
+ * @brief Function implementing the display thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_displayFunc */
+void displayFunc(void const *argument) {
+  /* USER CODE BEGIN displayFunc */
+  /* Infinite loop */
+  uint32_t x, y, radius;
+  uint32_t last_x, last_y;
+  while (1) {
+    GAME_update(&_game, (float)xTaskGetTickCount() / 1000.0f);  // s
+    GAME_get_ball(&_game, &x, &y, &radius);
+    // DISPLAY_draw_ball(x, y, radius, color);
+    // DISPLAY_update();
+    LCD_DrawEllipse(last_x, last_y, radius, radius, BACKGROUND);
+    LCD_DrawEllipse(x, y, radius, radius, WHITE);
+    last_x = x;
+    last_y = y;
+    osDelay(34);
+  }
+  /* USER CODE END displayFunc */
 }
 
 /* Private application code --------------------------------------------------*/

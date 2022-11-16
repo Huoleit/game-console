@@ -5,6 +5,12 @@
     "gpio.h": "c",
     "main.h": "c",
     "cmsis_os.h": "c",
-    "lcd.h": "c"
+    "lcd.h": "c",
+    "stm32f1xx_hal.h": "c",
+    "stddef.h": "c",
+    "game.h": "c",
+    "ascii.h": "c",
+    "display.h": "c",
+    "math.h": "c"
   }
 }

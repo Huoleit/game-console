@@ -35,7 +35,7 @@
 #define      GetGBKCode( ucBuffer, usChar )  	 
 
  
-#define      WHITE		           0xFFFF	   
+#define      WHITE		                     0xFFFF	   
 #define      BLACK                         0x0000	 
 #define      GREY                          0xF7DE	  
 #define      BLUE                          0x001F	  
@@ -43,9 +43,8 @@
 #define      RED                           0xF800	  
 #define      MAGENTA                       0xF81F	 
 #define      CYAN                          0x7FFF	   
-#define      YELLOW                        0xFFE0	 
-#define      BACKGROUND		           WHITE  
-
+#define      YELLOW                        0xFFE0
+#define      BACKGROUND                    BLACK
 
 #define      CMD_Set_COLUMN		   0x2A	     
 #define      CMD_Set_PAGE		   0x2B	     

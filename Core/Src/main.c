@@ -23,7 +23,6 @@
 #include "fsmc.h"
 #include "gpio.h"
 
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -91,6 +90,7 @@ int main(void) {
   MX_FSMC_Init();
   /* USER CODE BEGIN 2 */
   LCD_INIT();
+  GAME_init(&_game, DISPLAY_WIDTH, DISPLAY_HEIGHT);
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */

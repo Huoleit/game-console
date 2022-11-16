@@ -31,6 +31,8 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "display.h"
+#include "game.h"
 #include "lcd.h"
 #include "stdio.h"
 /* USER CODE END Includes */
