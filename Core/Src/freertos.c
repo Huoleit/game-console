@@ -183,6 +183,7 @@ void displayFunc(void const *argument) {
   /* USER CODE BEGIN displayFunc */
   /* Infinite loop */
   int ball_x, ball_y, ball_radius;
+  u_int32_t ball_color;
   int paddle_x, paddle_y, paddle_width, paddle_height;
   while (1) {
     if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)) {
@@ -195,10 +196,10 @@ void displayFunc(void const *argument) {
 
     GAME_update(&_game, (float)xTaskGetTickCount() / 1000.0f);  // s
 
-    GAME_get_ball(&_game, &ball_x, &ball_y, &ball_radius);
+    GAME_get_ball(&_game, &ball_x, &ball_y, &ball_radius, &ball_color);
     GAME_get_paddle(&_game, &paddle_x, &paddle_y, &paddle_width,
                     &paddle_height);
-    DISPLAY_draw_ball(ball_x, ball_y, ball_radius, WHITE);
+    DISPLAY_draw_ball(ball_x, ball_y, ball_radius, ball_color);
     DISPLAY_draw_paddle(paddle_x, paddle_y, paddle_width, paddle_height, WHITE);
 
     DISPLAY_update();

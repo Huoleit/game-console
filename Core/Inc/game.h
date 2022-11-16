@@ -11,7 +11,8 @@ struct GameBoard;
 void GAME_init(struct GameBoard *board, int width, int height);
 void GAME_set_paddle_speed(struct GameBoard *board, float speed);
 void GAME_update(struct GameBoard *board, float curTime);
-void GAME_get_ball(struct GameBoard *board, int *x, int *y, int *radius);
+void GAME_get_ball(struct GameBoard *board, int *x, int *y, int *radius,
+                   uint32_t *color);
 void GAME_get_paddle(struct GameBoard *board, int *x, int *y, int *width,
                      int *height);
 

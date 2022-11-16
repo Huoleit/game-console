@@ -1,6 +1,8 @@
 #include "game.h"
 
+#include "lcd.h"
 #include "stddef.h"
+#include "stdlib.h"
 
 struct Boundary {
   float u, v;  // Norm vector
@@ -17,6 +19,7 @@ struct GameBoard {
     int x, y;
     float dx, dy;  // Norm vector
     float radius;
+    uint16_t color;
   } ball;
 
   struct {
@@ -68,6 +71,7 @@ void GAME_init(struct GameBoard* board, int width, int height) {
   board->ball.x = width / 2;
   board->ball.y = height / 2;
   board->ball.radius = 5;
+  board->ball.color = WHITE;
 
   board->ball.dx = 200;
   board->ball.dy = 150;
@@ -161,13 +165,27 @@ void GAME_update(struct GameBoard* board, float curTime) {
   if (board->paddle.x > board->width) {
     board->paddle.x = board->width;
   }
+
+  // Ball hit paddle
+  if (board->ball.y + board->ball.radius >=
+      board->height - board->paddle.hight) {
+    if (board->ball.x >= board->paddle.x - board->paddle.width / 2 &&
+        board->ball.x <= board->paddle.x + board->paddle.width / 2) {
+      board->ball.y =
+          board->height - board->paddle.hight - board->ball.radius - 2;
+      board->ball.dy = -board->ball.dy;
+      board->ball.color = rand() % 0xFFFF;
+    }
+  }
 }
 
 // get the position of ball
-void GAME_get_ball(struct GameBoard* board, int* x, int* y, int* radius) {
+void GAME_get_ball(struct GameBoard* board, int* x, int* y, int* radius,
+                   uint32_t* color) {
   *x = board->ball.x;
   *y = board->ball.y;
   *radius = board->ball.radius;
+  *color = board->ball.color;
 }
 
 // get the position of paddle
