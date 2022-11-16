@@ -1,28 +1,71 @@
 #include "display.h"
 
-uint16_t lastFrame[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {WHITE};
-uint16_t curFrame[DISPLAY_HEIGHT][DISPLAY_WIDTH] = {WHITE};
+struct Ball {
+  int x, y;
+  int radius;
+  int color;
+  int valid;
+};
+
+struct Paddle {
+  int x, y;
+  int width, height;
+  int color;
+  int valid;
+};
+
+struct Line {
+  int x1, y1;
+  int x2, y2;
+  int valid;
+};
+
+struct Ball currentBall, lastBall;
+struct Paddle currentPaddle, lastPaddle;
 
 void DISPLAY_draw_ball(int x, int y, int radius, int color) {
-  int i, j;
-  for (i = x - radius; i < x + radius; i++) {
-    for (j = y - radius; j < y + radius; j++) {
-      if (i >= 0 && i < DISPLAY_WIDTH && j >= 0 && j < DISPLAY_HEIGHT) {
-        curFrame[j][i] = color;
-      }
-    }
-  }
+  currentBall.x = x;
+  currentBall.y = y;
+  currentBall.radius = radius;
+  currentBall.color = color;
+  currentBall.valid = 1;
+}
+
+void DISPLAY_draw_paddle(int x, int y, int width, int height, int color) {
+  currentPaddle.x = x;
+  currentPaddle.y = y;
+  currentPaddle.width = width;
+  currentPaddle.height = height;
+  currentPaddle.color = color;
+  currentPaddle.valid = 1;
 }
 
 void DISPLAY_update() {
-  int i, j;
-  for (i = 0; i < DISPLAY_WIDTH; i++) {
-    for (j = 0; j < DISPLAY_HEIGHT; j++) {
-      if (curFrame[j][i] != lastFrame[j][i]) {
-        LCD_DrawDot(i, j, curFrame[j][i]);
-        lastFrame[j][i] = curFrame[j][i];
-      }
-      curFrame[j][i] = WHITE;
+  if (currentBall.valid) {
+    if (lastBall.valid) {
+      LCD_DrawCircle(lastBall.x, lastBall.y, lastBall.radius, BACKGROUND);
     }
+    LCD_DrawCircle(currentBall.x, currentBall.y, currentBall.radius,
+                   currentBall.color);
+    lastBall = currentBall;
+  }
+  if (currentPaddle.valid) {
+    if (lastPaddle.valid) {
+      if (lastPaddle.x < currentPaddle.x) {
+        LCD_DrawRectangle(
+            (lastPaddle.x + currentPaddle.x - currentPaddle.width) / 2,
+            lastPaddle.y, currentPaddle.x - lastPaddle.x + 1, lastPaddle.height,
+            BACKGROUND);
+      } else if (lastPaddle.x > currentPaddle.x) {
+        LCD_DrawRectangle(
+            (lastPaddle.x + currentPaddle.x + currentPaddle.width) / 2,
+            lastPaddle.y, lastPaddle.x - currentPaddle.x + 1, lastPaddle.height,
+            BACKGROUND);
+      }
+    }
+    LCD_DrawRectangle(currentPaddle.x, currentPaddle.y, currentPaddle.width,
+                      currentPaddle.height, currentPaddle.color);
+
+    lastPaddle = currentPaddle;
   }
 }

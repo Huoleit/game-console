@@ -19,17 +19,23 @@ struct GameBoard {
     float radius;
   } ball;
 
+  struct {
+    float x;
+    int hight, width;
+    float speed;
+  } paddle;
+
   float lastTime;
 } GameBoard;
 
 struct GameBoard _game;
 struct Boundary _boundaries[4];
 
-static in_bound(float x, float y, struct Boundary* b) {
+static int in_bound(float x, float y, struct Boundary* b) {
   return (b->u * x) + (b->v * y) >= b->c;
 }
 
-static normalize(float* x, float* y) {
+static void normalize(float* x, float* y) {
   float sumOfSquares = *x * *x + *y * *y;
   if (sumOfSquares > 1e-6) {
     *x = *x / sumOfSquares;
@@ -66,6 +72,10 @@ void GAME_init(struct GameBoard* board, int width, int height) {
   board->ball.dx = 200;
   board->ball.dy = 150;
 
+  board->paddle.x = width / 2;
+  board->paddle.hight = 10;
+  board->paddle.width = 50;
+
   board->lastTime = 0;
 
   board->boundaries = _boundaries;
@@ -74,6 +84,10 @@ void GAME_init(struct GameBoard* board, int width, int height) {
   board->boundaries[1] = init_boundary(0, 1, 0, 0);
   board->boundaries[2] = init_boundary(-1, 0, width, 0);
   board->boundaries[3] = init_boundary(0, -1, 0, height);
+}
+
+void GAME_set_paddle_speed(struct GameBoard* board, float speed) {
+  board->paddle.speed = speed;
 }
 
 void GAME_update(struct GameBoard* board, float curTime) {
@@ -85,14 +99,13 @@ void GAME_update(struct GameBoard* board, float curTime) {
   float dt = curTime - board->lastTime;
   board->lastTime = curTime;
 
+  // Ball
   float x = board->ball.x + board->ball.dx * dt;  // intermediate pos
   float y = board->ball.y + board->ball.dy * dt;
   float dx = board->ball.dx;
   float dy = board->ball.dy;
 
-  int allPass;
-  while (1) {
-    allPass = 1;
+  for (int k = 0; k < 3; k++) {
     for (int i = 0; i < board->boundaryCount; i++) {
       struct Boundary* b = &board->boundaries[i];
       if (!in_bound(x, y, b)) {
@@ -118,19 +131,14 @@ void GAME_update(struct GameBoard* board, float curTime) {
         x += dx * (dt - t);  // Move after collision
         y += dy * (dt - t);
 
-        allPass = 0;
         break;
       }
     }
-    if (allPass) {
-      board->ball.x = x;
-      board->ball.y = y;
-      board->ball.dx = dx;
-      board->ball.dy = dy;
-
-      break;
-    }
   }
+  board->ball.x = x;
+  board->ball.y = y;
+  board->ball.dx = dx;
+  board->ball.dy = dy;
 
   if (board->ball.x < 0) {
     board->ball.x = 0;
@@ -144,6 +152,15 @@ void GAME_update(struct GameBoard* board, float curTime) {
   if (board->ball.y > board->height) {
     board->ball.y = board->height;
   }
+
+  // Paddle
+  board->paddle.x += board->paddle.speed * dt;
+  if (board->paddle.x < 0) {
+    board->paddle.x = 0;
+  }
+  if (board->paddle.x > board->width) {
+    board->paddle.x = board->width;
+  }
 }
 
 // get the position of ball
@@ -151,4 +168,13 @@ void GAME_get_ball(struct GameBoard* board, int* x, int* y, int* radius) {
   *x = board->ball.x;
   *y = board->ball.y;
   *radius = board->ball.radius;
+}
+
+// get the position of paddle
+void GAME_get_paddle(struct GameBoard* board, int* x, int* y, int* width,
+                     int* height) {
+  *x = board->paddle.x;
+  *y = board->height - board->paddle.hight / 2;
+  *width = board->paddle.width;
+  *height = board->paddle.hight;
 }

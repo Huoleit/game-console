@@ -136,10 +136,10 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void const *argument) {
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
-  char str[20];
-  TickType_t lastTick = 0;
+  // char str[20];
+  // TickType_t lastTick = 0;
   for (;;) {
-    TickType_t curTick = xTaskGetTickCount();
+    // TickType_t curTick = xTaskGetTickCount();
 
     // sprintf(str, "%10lu", curTick);
     // LCD_DrawString(20, 20, str);
@@ -182,17 +182,27 @@ void heartBeat(void const *argument) {
 void displayFunc(void const *argument) {
   /* USER CODE BEGIN displayFunc */
   /* Infinite loop */
-  uint32_t x, y, radius;
-  uint32_t last_x, last_y;
+  int ball_x, ball_y, ball_radius;
+  int paddle_x, paddle_y, paddle_width, paddle_height;
   while (1) {
+    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)) {
+      GAME_set_paddle_speed(&_game, -80);
+    } else if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
+      GAME_set_paddle_speed(&_game, 80);
+    } else {
+      GAME_set_paddle_speed(&_game, 0);
+    }
+
     GAME_update(&_game, (float)xTaskGetTickCount() / 1000.0f);  // s
-    GAME_get_ball(&_game, &x, &y, &radius);
-    // DISPLAY_draw_ball(x, y, radius, color);
-    // DISPLAY_update();
-    LCD_DrawEllipse(last_x, last_y, radius, radius, BACKGROUND);
-    LCD_DrawEllipse(x, y, radius, radius, WHITE);
-    last_x = x;
-    last_y = y;
+
+    GAME_get_ball(&_game, &ball_x, &ball_y, &ball_radius);
+    GAME_get_paddle(&_game, &paddle_x, &paddle_y, &paddle_width,
+                    &paddle_height);
+    DISPLAY_draw_ball(ball_x, ball_y, ball_radius, WHITE);
+    DISPLAY_draw_paddle(paddle_x, paddle_y, paddle_width, paddle_height, WHITE);
+
+    DISPLAY_update();
+
     osDelay(34);
   }
   /* USER CODE END displayFunc */
