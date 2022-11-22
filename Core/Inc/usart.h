@@ -32,10 +32,16 @@ extern "C" {
 #include "game.h"
 /* USER CODE END Includes */
 
+extern UART_HandleTypeDef huart5;
+
 extern UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN Private defines */
+
+#define USART_FIXED_HEADER 0xAB
+#define USART_FIXED_FOOTER 0xCD
 struct __attribute__((__packed__)) UART_GameStatusMsg {
+  uint8_t FIXED_HEADER;
   uint8_t id;
   uint8_t state;
 
@@ -45,16 +51,19 @@ struct __attribute__((__packed__)) UART_GameStatusMsg {
     float radius;
     uint16_t color;
   } ball;
-
   uint32_t tickCount;
+
+  uint8_t FIXED_FOOTER;
 };
 
+struct UART_GameStatusMsg rxBuffer;
 extern uint8_t _other_isConnected;
 extern struct UART_GameStatusMsg _other_gameStatus;
 extern uint32_t _other_lastReceiveTick;
 extern uint8_t _other_gameStatus_isUpdated;
 /* USER CODE END Private defines */
 
+void MX_UART5_Init(void);
 void MX_USART2_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */

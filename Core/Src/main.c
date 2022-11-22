@@ -90,6 +90,7 @@ int main(void) {
   MX_DMA_Init();
   MX_FSMC_Init();
   MX_USART2_UART_Init();
+  MX_UART5_Init();
   /* USER CODE BEGIN 2 */
   LCD_INIT();
   GAME_init(&_game, DISPLAY_WIDTH, DISPLAY_HEIGHT);

@@ -17,5 +17,8 @@
     "usart.h": "c",
     "freertos.h": "c",
     "input_device.h": "c"
-  }
+  },
+  "cSpell.words": [
+    "USART"
+  ]
 }

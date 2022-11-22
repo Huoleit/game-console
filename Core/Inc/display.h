@@ -20,6 +20,8 @@ void DISPLAY_draw_paddle_from_game(struct GAME_Board *board);
 void DISPLAY_display();
 
 void DISPLAY_game_over();
+void DISPLAY_connecting(float dt);
+void DISPLAY_clear();
 
 void DISPLAY_update(struct GAME_Board *board);
 

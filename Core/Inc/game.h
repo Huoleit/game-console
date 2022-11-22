@@ -6,6 +6,8 @@ extern "C" {
 
 #include "stdint.h"
 
+// #define GAME_SINGLE_PLAYER
+
 #define GAME_UPDATE_RATE_MS 34
 #define GAME_STATUS_RECEIVE_TIMEOUT_MS 25
 #define GAME_STATUS_WAIT_MS (GAME_UPDATE_RATE_MS - GAME_STATUS_RECEIVE_TIMEOUT_MS)
@@ -16,8 +18,7 @@ enum GAME_State {
   GAME_STATE_INIT,
   GAME_STATE_CONNECTING,
   GAME_STATE_PLAY,
-  GAME_STATE_OVER,
-  GAME_STATE_EXIT
+  GAME_STATE_OVER
 };
 
 struct GAME_Boundary {
@@ -56,6 +57,7 @@ void GAME_get_ball(struct GAME_Board *board, int *x, int *y, int *radius,
                    uint32_t *color);
 void GAME_get_paddle(struct GAME_Board *board, int *x, int *y, int *width, int *height);
 int GAME_get_state(struct GAME_Board *board);
+int GAME_get_id(struct GAME_Board *board);
 
 void GAME_set_id(struct GAME_Board *board, int id);
 void GAME_set_state(struct GAME_Board *board, int state);

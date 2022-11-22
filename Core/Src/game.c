@@ -132,26 +132,14 @@ void GAME_init(struct GAME_Board *board, int width, int height) {
   board->boundaries[2] = init_boundary(-1, 0, width, 0); // Right
   // board->boundaries[3] = init_boundary(0, -1, 0, height);  // Bottom
 
+#ifdef GAME_SINGLE_PLAYER
   board->state = GAME_STATE_PLAY;
+#else
+  board->state = GAME_STATE_INIT;
+#endif
 }
 
-void GAME_update(struct GAME_Board *board, float dt) {
-
-  switch (board->state) {
-  case GAME_STATE_INIT:
-    break;
-  case GAME_STATE_CONNECTING:
-    break;
-  case GAME_STATE_PLAY:
-    break;
-  case GAME_STATE_OVER:
-    break;
-  case GAME_STATE_EXIT:
-    break;
-  default:
-    break;
-  }
-}
+void GAME_update(struct GAME_Board *board, float dt) {}
 
 void GAME_set_id(struct GAME_Board *board, int id) { board->id = id; }
 void GAME_set_state(struct GAME_Board *board, int state) { board->state = state; }
@@ -186,3 +174,4 @@ void GAME_get_paddle(struct GAME_Board *board, int *x, int *y, int *width, int *
 
 // get the state of game
 int GAME_get_state(struct GAME_Board *board) { return board->state; }
+int GAME_get_id(struct GAME_Board *board) { return board->id; }

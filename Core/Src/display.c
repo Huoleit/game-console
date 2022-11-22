@@ -54,6 +54,29 @@ void DISPLAY_game_over() {
   LCD_DrawString(80, 160, "Game Over");
 }
 
+void DISPLAY_connecting(float dt) {
+  static float t;
+  static int mode;
+
+  t += dt;
+  if (t > 1) {
+    t = 0;
+    mode++;
+    mode %= 4;
+  }
+  if (mode == 0) {
+    LCD_DrawString(80, 160, "Connecting   ");
+  } else if (mode == 1) {
+    LCD_DrawString(80, 160, "Connecting.  ");
+  } else if (mode == 2) {
+    LCD_DrawString(80, 160, "Connecting.. ");
+  } else if (mode == 3) {
+    LCD_DrawString(80, 160, "Connecting...");
+  }
+}
+
+void DISPLAY_clear() { LCD_Clear(0, 0, 240, 320, BACKGROUND); }
+
 void DISPLAY_display() {
   if (currentBall.valid) {
     if (lastBall.valid) {
@@ -81,15 +104,4 @@ void DISPLAY_display() {
   }
 }
 
-void DISPLAY_update(struct GAME_Board *board) {
-  switch (GAME_get_state(board)) {
-  case GAME_STATE_CONNECTING:
-    break;
-  case GAME_STATE_PLAY:
-    break;
-  case GAME_STATE_OVER:
-    break;
-  default:
-    break;
-  }
-}
+void DISPLAY_update(struct GAME_Board *board) {}

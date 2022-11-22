@@ -22,20 +22,49 @@
 
 /* USER CODE BEGIN 0 */
 #include "FreeRTOS.h"
-
+#include "cmsis_os.h"
+#include "string.h"
 #include "task.h"
+
+extern osThreadId ReaderHandle;
 
 uint8_t _other_isConnected;
 uint8_t _other_gameStatus_isUpdated;
 struct UART_GameStatusMsg _other_gameStatus;
 uint32_t _other_lastReceiveTick;
 
-static struct UART_GameStatusMsg rxBuffer;
+struct UART_GameStatusMsg rxBuffer;
 /* USER CODE END 0 */
 
+UART_HandleTypeDef huart5;
 UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart2_rx;
 
+/* UART5 init function */
+void MX_UART5_Init(void) {
+
+  /* USER CODE BEGIN UART5_Init 0 */
+
+  /* USER CODE END UART5_Init 0 */
+
+  /* USER CODE BEGIN UART5_Init 1 */
+
+  /* USER CODE END UART5_Init 1 */
+  huart5.Instance = UART5;
+  huart5.Init.BaudRate = 115200;
+  huart5.Init.WordLength = UART_WORDLENGTH_8B;
+  huart5.Init.StopBits = UART_STOPBITS_1;
+  huart5.Init.Parity = UART_PARITY_NONE;
+  huart5.Init.Mode = UART_MODE_TX;
+  huart5.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart5.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart5) != HAL_OK) {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART5_Init 2 */
+
+  /* USER CODE END UART5_Init 2 */
+}
 /* USART2 init function */
 
 void MX_USART2_UART_Init(void) {
@@ -52,22 +81,46 @@ void MX_USART2_UART_Init(void) {
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.Mode = UART_MODE_RX;
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
   if (HAL_UART_Init(&huart2) != HAL_OK) {
     Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
-  HAL_UART_Receive_DMA(&huart2, (uint8_t *)&rxBuffer,
-                       sizeof(struct UART_GameStatusMsg)); // Start DMA
   /* USER CODE END USART2_Init 2 */
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle) {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if (uartHandle->Instance == USART2) {
+  if (uartHandle->Instance == UART5) {
+    /* USER CODE BEGIN UART5_MspInit 0 */
+
+    /* USER CODE END UART5_MspInit 0 */
+    /* UART5 clock enable */
+    __HAL_RCC_UART5_CLK_ENABLE();
+
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+    /**UART5 GPIO Configuration
+    PC12     ------> UART5_TX
+    PD2     ------> UART5_RX
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_12;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_2;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+    /* USER CODE BEGIN UART5_MspInit 1 */
+
+    /* USER CODE END UART5_MspInit 1 */
+  } else if (uartHandle->Instance == USART2) {
     /* USER CODE BEGIN USART2_MspInit 0 */
 
     /* USER CODE END USART2_MspInit 0 */
@@ -86,7 +139,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle) {
 
     GPIO_InitStruct.Pin = GPIO_PIN_3;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* USART2 DMA Init */
@@ -97,7 +150,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle) {
     hdma_usart2_rx.Init.MemInc = DMA_MINC_ENABLE;
     hdma_usart2_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_usart2_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    hdma_usart2_rx.Init.Mode = DMA_CIRCULAR;
+    hdma_usart2_rx.Init.Mode = DMA_NORMAL;
     hdma_usart2_rx.Init.Priority = DMA_PRIORITY_HIGH;
     if (HAL_DMA_Init(&hdma_usart2_rx) != HAL_OK) {
       Error_Handler();
@@ -113,7 +166,25 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle) {
 
 void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle) {
 
-  if (uartHandle->Instance == USART2) {
+  if (uartHandle->Instance == UART5) {
+    /* USER CODE BEGIN UART5_MspDeInit 0 */
+
+    /* USER CODE END UART5_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_UART5_CLK_DISABLE();
+
+    /**UART5 GPIO Configuration
+    PC12     ------> UART5_TX
+    PD2     ------> UART5_RX
+    */
+    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_12);
+
+    HAL_GPIO_DeInit(GPIOD, GPIO_PIN_2);
+
+    /* USER CODE BEGIN UART5_MspDeInit 1 */
+
+    /* USER CODE END UART5_MspDeInit 1 */
+  } else if (uartHandle->Instance == USART2) {
     /* USER CODE BEGIN USART2_MspDeInit 0 */
 
     /* USER CODE END USART2_MspDeInit 0 */
@@ -135,16 +206,13 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle) {
 }
 
 /* USER CODE BEGIN 1 */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-  uint32_t uxSavedInterruptStatus;
-  uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
-
-  _other_lastReceiveTick = HAL_GetTick();
-  _other_gameStatus = rxBuffer;
-  _other_isConnected = 1;
-  _other_gameStatus_isUpdated = 1;
-
-  taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
+  BaseType_t xHigherPriorityTaskWoken;
+  xHigherPriorityTaskWoken = pdFALSE;
+  if (huart->Instance == USART2) {
+    vTaskNotifyGiveFromISR(ReaderHandle, &xHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+  }
 }
 
 void UART_game_to_msg(struct GAME_Board *game, struct UART_GameStatusMsg *msg) {
@@ -159,5 +227,8 @@ void UART_game_to_msg(struct GAME_Board *game, struct UART_GameStatusMsg *msg) {
   msg->ball.color = game->ball.color;
 
   msg->tickCount = xTaskGetTickCount();
+
+  msg->FIXED_HEADER = USART_FIXED_HEADER;
+  msg->FIXED_FOOTER = USART_FIXED_FOOTER;
 }
 /* USER CODE END 1 */

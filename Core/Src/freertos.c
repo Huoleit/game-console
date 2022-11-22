@@ -111,7 +111,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityLow, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of Heartbeat */
@@ -153,7 +153,11 @@ void StartDefaultTask(void const *argument) {
     // LCD_DrawString(20, 50, str);
     // lastTick = xTaskGetTickCount();
 
-    // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+    if (GAME_get_id(&_game) == 1) {
+      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+    } else if (GAME_get_id(&_game) == 2) {
+      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_1);
+    }
     osDelay(200);
   }
   /* USER CODE END StartDefaultTask */
@@ -189,29 +193,35 @@ void displayFunc(void const *argument) {
   /* Infinite loop */
   struct UART_GameStatusMsg txBuffer;
   TickType_t lastTick = xTaskGetTickCount();
-  // Init phase - handshaking
-  // while (1) {
-  //   if (_other_isConnected && _other_gameStatus_isUpdated) {
-  //     taskENTER_CRITICAL();
-  //     _other_gameStatus_isUpdated = 0;
-  //     taskEXIT_CRITICAL();
-  //     if (_other_gameStatus.tickCount > xTaskGetTickCount()) {
-  //       GAME_set_id(&_game, 1);
-  //     } else {
-  //       GAME_set_id(&_game, 2);
-  //     }
-  //   }
-
-  //   osDelay(GAME_STATUS_WAIT_MS);
-  // }
-
+  // int txFailCount = 0;
   // Game loop
   float dt = (float)(GAME_UPDATE_RATE_MS) / 1000.0f; // sec
   while (1) {
     switch (GAME_get_state(&_game)) {
     case GAME_STATE_INIT:
+      DISPLAY_clear();
+      GAME_set_state(&_game, GAME_STATE_CONNECTING);
       break;
     case GAME_STATE_CONNECTING:
+      DISPLAY_connecting(dt);
+      // id == 0 means just power up
+      // if (_other_isConnected) {
+      //   if (GAME_get_id(&_game) == 0) {
+      //     if (_other_gameStatus.id == 1) {
+      //       GAME_set_id(&_game, 2);
+      //     } else if (_other_gameStatus.id == 2) {
+      //       GAME_set_id(&_game, 1);
+      //     } else { // Both no id
+      //       if (_other_gameStatus.tickCount < xTaskGetTickCount()) {
+      //         GAME_set_id(&_game, 1);
+      //       } else {
+      //         GAME_set_id(&_game, 2);
+      //       }
+      //     }
+      //   }
+      //   DISPLAY_clear();
+      //   GAME_set_state(&_game, GAME_STATE_PLAY);
+      // }
       break;
     case GAME_STATE_PLAY:
       GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
@@ -221,22 +231,23 @@ void displayFunc(void const *argument) {
       DISPLAY_display();
 
       if (_game.ball.y > _game.height) {
+        DISPLAY_game_over();
         GAME_set_state(&_game, GAME_STATE_OVER);
+      }
+      if (!_other_isConnected) {
+        DISPLAY_clear();
+        GAME_set_state(&_game, GAME_STATE_CONNECTING);
       }
       break;
     case GAME_STATE_OVER:
-      DISPLAY_game_over();
-      GAME_set_state(&_game, GAME_STATE_EXIT);
-      break;
-    case GAME_STATE_EXIT:
       break;
     default:
       break;
     }
 
     UART_game_to_msg(&_game, &txBuffer);
-    // HAL_UART_Transmit(&huart2, (uint8_t *)&txBuffer, sizeof(struct
-    // UART_GameStatusMsg),10);
+    HAL_UART_Transmit(&huart5, (uint8_t *)&txBuffer, sizeof(struct UART_GameStatusMsg),
+                      20);
 
     osDelayUntil(&lastTick, GAME_UPDATE_RATE_MS);
   }
@@ -253,19 +264,41 @@ void displayFunc(void const *argument) {
 void uartRead(void const *argument) {
   /* USER CODE BEGIN uartRead */
   /* Infinite loop */
-  // struct UART_GameStatusMsg rxBuffer;
-  // int failedCount = 0;
+  const TickType_t xDisconnectTimeout = pdMS_TO_TICKS(GAME_UPDATE_RATE_MS * 2);
+  uint32_t ulNotifiedValue;
+  TickType_t lastTick = xTaskGetTickCount();
 
-  while (1) {
+  for (;;) {
+    HAL_UARTEx_ReceiveToIdle_DMA(&huart2, (uint8_t *)&rxBuffer,
+                                 sizeof(struct UART_GameStatusMsg));
 
-    if (_other_isConnected == 1 &&
-        HAL_GetTick() - _other_lastReceiveTick > GAME_STATUS_TIMEOUT_MS) {
+    ulNotifiedValue = ulTaskNotifyTake(pdFALSE, xDisconnectTimeout);
+    if (ulNotifiedValue > 0) {
+      /* Perform any processing necessitated by the interrupt. */
+      if (rxBuffer.FIXED_HEADER == USART_FIXED_HEADER &&
+          rxBuffer.FIXED_FOOTER == USART_FIXED_FOOTER) {
+        taskENTER_CRITICAL();
+        _other_isConnected = 1;
+        _other_gameStatus = rxBuffer;
+        taskEXIT_CRITICAL();
+
+        lastTick = xTaskGetTickCount();
+      } else {
+        if (xTaskGetTickCount() - lastTick > xDisconnectTimeout) {
+          taskENTER_CRITICAL();
+          _other_isConnected = 0;
+          taskEXIT_CRITICAL();
+        }
+
+        osDelay(GAME_UPDATE_RATE_MS / 3);
+      }
+
+    } else {
+      /* Did not receive a notification within the expected time. */
       taskENTER_CRITICAL();
       _other_isConnected = 0;
       taskEXIT_CRITICAL();
     }
-
-    osDelay(GAME_STATUS_WAIT_MS);
   }
   /* USER CODE END uartRead */
 }
