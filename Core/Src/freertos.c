@@ -208,33 +208,35 @@ void displayFunc(void const *argument) {
   // Game loop
   float dt = (float)(GAME_UPDATE_RATE_MS) / 1000.0f; // sec
   while (1) {
-    GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
-    GAME_update(&_game, dt);
-    DISPLAY_update(&_game);
-
-    UART_game_to_msg(&_game, &txBuffer);
-    // HAL_UART_Transmit(&huart2, (uint8_t *)&txBuffer, sizeof(struct
-    // UART_GameStatusMsg),10);
-
-    // state machine
-    switch (_game.state) {
+    switch (GAME_get_state(&_game)) {
     case GAME_STATE_INIT:
       break;
     case GAME_STATE_CONNECTING:
       break;
     case GAME_STATE_PLAY:
+      GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
+      GAME_loop(&_game, dt);
+      DISPLAY_draw_ball_from_game(&_game);
+      DISPLAY_draw_paddle_from_game(&_game);
+      DISPLAY_display();
+
       if (_game.ball.y > _game.height) {
-        _game.state = GAME_STATE_OVER;
+        GAME_set_state(&_game, GAME_STATE_OVER);
       }
       break;
     case GAME_STATE_OVER:
-      _game.state = GAME_STATE_EXIT;
+      DISPLAY_game_over();
+      GAME_set_state(&_game, GAME_STATE_EXIT);
       break;
     case GAME_STATE_EXIT:
       break;
     default:
       break;
     }
+
+    UART_game_to_msg(&_game, &txBuffer);
+    // HAL_UART_Transmit(&huart2, (uint8_t *)&txBuffer, sizeof(struct
+    // UART_GameStatusMsg),10);
 
     osDelayUntil(&lastTick, GAME_UPDATE_RATE_MS);
   }

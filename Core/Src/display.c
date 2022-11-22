@@ -86,12 +86,8 @@ void DISPLAY_update(struct GAME_Board *board) {
   case GAME_STATE_CONNECTING:
     break;
   case GAME_STATE_PLAY:
-    DISPLAY_draw_ball_from_game(board);
-    DISPLAY_draw_paddle_from_game(board);
-    DISPLAY_display();
     break;
   case GAME_STATE_OVER:
-    DISPLAY_game_over();
     break;
   default:
     break;

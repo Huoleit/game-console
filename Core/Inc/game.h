@@ -49,6 +49,7 @@ struct GAME_Board {
 };
 
 void GAME_init(struct GAME_Board *board, int width, int height);
+void GAME_loop(struct GAME_Board *board, float dt);
 void GAME_update(struct GAME_Board *board, float curTime);
 
 void GAME_get_ball(struct GAME_Board *board, int *x, int *y, int *radius,

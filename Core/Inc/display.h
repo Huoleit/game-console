@@ -15,7 +15,7 @@ void DISPLAY_draw_ball(int x, int y, int radius, int color);
 void DISPLAY_draw_ball_from_game(struct GAME_Board *board);
 
 void DISPLAY_draw_paddle(int x, int y, int width, int height, int color);
-void DISPLAY_draw_ball_from_game(struct GAME_Board *board);
+void DISPLAY_draw_paddle_from_game(struct GAME_Board *board);
 
 void DISPLAY_display();
 

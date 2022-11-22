@@ -37,7 +37,7 @@ static struct GAME_Boundary init_boundary(float u, float v, float x, float y) {
   return b;
 }
 
-static void game_loop(struct GAME_Board *board, float dt) {
+void GAME_loop(struct GAME_Board *board, float dt) {
   // Ball
   float x = board->ball.x + board->ball.dx * dt; // intermediate pos
   float y = board->ball.y + board->ball.dy * dt;
@@ -143,7 +143,6 @@ void GAME_update(struct GAME_Board *board, float dt) {
   case GAME_STATE_CONNECTING:
     break;
   case GAME_STATE_PLAY:
-    game_loop(board, dt);
     break;
   case GAME_STATE_OVER:
     break;
