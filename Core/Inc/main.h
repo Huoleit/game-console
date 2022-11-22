@@ -35,6 +35,7 @@ extern "C" {
 #include "game.h"
 #include "lcd.h"
 #include "stdio.h"
+#include "usart.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

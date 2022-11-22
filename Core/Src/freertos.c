@@ -19,7 +19,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
-
 #include "cmsis_os.h"
 #include "main.h"
 #include "task.h"
@@ -51,6 +50,7 @@
 osThreadId defaultTaskHandle;
 osThreadId HeartbeatHandle;
 osThreadId displayHandle;
+osThreadId ReaderHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -60,6 +60,7 @@ osThreadId displayHandle;
 void StartDefaultTask(void const *argument);
 void heartBeat(void const *argument);
 void displayFunc(void const *argument);
+void uartRead(void const *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -121,6 +122,10 @@ void MX_FREERTOS_Init(void) {
   osThreadDef(display, displayFunc, osPriorityNormal, 0, 128);
   displayHandle = osThreadCreate(osThread(display), NULL);
 
+  /* definition and creation of Reader */
+  osThreadDef(Reader, uartRead, osPriorityAboveNormal, 0, 128);
+  ReaderHandle = osThreadCreate(osThread(Reader), NULL);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -148,7 +153,7 @@ void StartDefaultTask(void const *argument) {
     // LCD_DrawString(20, 50, str);
     // lastTick = xTaskGetTickCount();
 
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+    // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
     osDelay(200);
   }
   /* USER CODE END StartDefaultTask */
@@ -165,7 +170,7 @@ void heartBeat(void const *argument) {
   /* USER CODE BEGIN heartBeat */
   /* Infinite loop */
   for (;;) {
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
+    // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 
     osDelay(500);
   }
@@ -183,8 +188,11 @@ void displayFunc(void const *argument) {
   /* USER CODE BEGIN displayFunc */
   /* Infinite loop */
   int ball_x, ball_y, ball_radius;
-  u_int32_t ball_color;
+  uint32_t ball_color;
+  struct UART_GameStatusMsg txBuffer;
+
   int paddle_x, paddle_y, paddle_width, paddle_height;
+  TickType_t lastTick = xTaskGetTickCount();
   while (1) {
     if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)) {
       GAME_set_paddle_speed(&_game, -80);
@@ -194,32 +202,70 @@ void displayFunc(void const *argument) {
       GAME_set_paddle_speed(&_game, 0);
     }
 
-    GAME_update(&_game, (float)xTaskGetTickCount() / 1000.0f);  // s
-    switch (GAME_get_state(&_game)) {
-      case GAME_STATE_INIT:
-        break;
-      case GAME_STATE_PLAY:
-        GAME_get_ball(&_game, &ball_x, &ball_y, &ball_radius, &ball_color);
-        GAME_get_paddle(&_game, &paddle_x, &paddle_y, &paddle_width,
-                        &paddle_height);
-        DISPLAY_draw_ball(ball_x, ball_y, ball_radius, ball_color);
-        DISPLAY_draw_paddle(paddle_x, paddle_y, paddle_width, paddle_height,
-                            WHITE);
+    GAME_update(&_game, (float)xTaskGetTickCount() / 1000.0f); // s
 
-        DISPLAY_update();
-        break;
-      case GAME_STATE_OVER:
-        DISPLAY_game_over();
-        break;
+    switch (GAME_get_state(&_game)) {
+    case GAME_STATE_CONNECTING:
+      break;
+    case GAME_STATE_PLAY:
+      GAME_get_ball(&_game, &ball_x, &ball_y, &ball_radius, &ball_color);
+      GAME_get_paddle(&_game, &paddle_x, &paddle_y, &paddle_width, &paddle_height);
+      DISPLAY_draw_ball(ball_x, ball_y, ball_radius, ball_color);
+      DISPLAY_draw_paddle(paddle_x, paddle_y, paddle_width, paddle_height, WHITE);
+
+      DISPLAY_update();
+      break;
+    case GAME_STATE_OVER:
+      DISPLAY_game_over();
+      break;
+    default:
+      break;
     }
 
-    osDelay(34);
+    txBuffer.id = 1;
+    txBuffer.state = GAME_get_state(&_game);
+    txBuffer.ball.x = ball_x;
+    txBuffer.ball.y = ball_y;
+    txBuffer.ball.radius = ball_radius;
+    txBuffer.ball.color = ball_color;
+    txBuffer.tickCount = xTaskGetTickCount();
+    (void)txBuffer;
+    // HAL_UART_Transmit(&huart2, (uint8_t *)&txBuffer, sizeof(struct
+    // UART_GameStatusMsg),10);
+
+    osDelayUntil(&lastTick, GAME_UPDATE_RATE_MS);
   }
   /* USER CODE END displayFunc */
 }
 
-/* Private application code
- * --------------------------------------------------*/
+/* USER CODE BEGIN Header_uartRead */
+/**
+ * @brief Function implementing the Reader thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_uartRead */
+void uartRead(void const *argument) {
+  /* USER CODE BEGIN uartRead */
+  /* Infinite loop */
+  // struct UART_GameStatusMsg rxBuffer;
+  // int failedCount = 0;
+
+  while (1) {
+
+    if (_other_isConnected == 1 &&
+        HAL_GetTick() - _other_lastReceiveTick > GAME_STATUS_TIMEOUT_MS) {
+      taskENTER_CRITICAL();
+      _other_isConnected = 0;
+      taskEXIT_CRITICAL();
+    }
+
+    osDelay(GAME_STATUS_WAIT_MS);
+  }
+  /* USER CODE END uartRead */
+}
+
+/* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
