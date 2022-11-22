@@ -22,11 +22,15 @@
 
 /* USER CODE BEGIN 0 */
 #include "FreeRTOS.h"
+
 #include "task.h"
 
 uint8_t _other_isConnected;
+uint8_t _other_gameStatus_isUpdated;
 struct UART_GameStatusMsg _other_gameStatus;
 uint32_t _other_lastReceiveTick;
+
+static struct UART_GameStatusMsg rxBuffer;
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart2;
@@ -55,7 +59,8 @@ void MX_USART2_UART_Init(void) {
     Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
-
+  HAL_UART_Receive_DMA(&huart2, (uint8_t *)&rxBuffer,
+                       sizeof(struct UART_GameStatusMsg)); // Start DMA
   /* USER CODE END USART2_Init 2 */
 }
 
@@ -131,11 +136,28 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle) {
 
 /* USER CODE BEGIN 1 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-  _other_lastReceiveTick = HAL_GetTick();
-
   uint32_t uxSavedInterruptStatus;
   uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
+
+  _other_lastReceiveTick = HAL_GetTick();
+  _other_gameStatus = rxBuffer;
   _other_isConnected = 1;
+  _other_gameStatus_isUpdated = 1;
+
   taskEXIT_CRITICAL_FROM_ISR(uxSavedInterruptStatus);
+}
+
+void UART_game_to_msg(struct GAME_Board *game, struct UART_GameStatusMsg *msg) {
+  msg->id = game->id;
+  msg->state = game->state;
+
+  msg->ball.x = game->ball.x;
+  msg->ball.y = game->ball.y;
+  msg->ball.dx = game->ball.dx;
+  msg->ball.dy = game->ball.dy;
+  msg->ball.radius = game->ball.radius;
+  msg->ball.color = game->ball.color;
+
+  msg->tickCount = xTaskGetTickCount();
 }
 /* USER CODE END 1 */

@@ -187,51 +187,54 @@ void heartBeat(void const *argument) {
 void displayFunc(void const *argument) {
   /* USER CODE BEGIN displayFunc */
   /* Infinite loop */
-  int ball_x, ball_y, ball_radius;
-  uint32_t ball_color;
   struct UART_GameStatusMsg txBuffer;
-
-  int paddle_x, paddle_y, paddle_width, paddle_height;
   TickType_t lastTick = xTaskGetTickCount();
+  // Init phase - handshaking
+  // while (1) {
+  //   if (_other_isConnected && _other_gameStatus_isUpdated) {
+  //     taskENTER_CRITICAL();
+  //     _other_gameStatus_isUpdated = 0;
+  //     taskEXIT_CRITICAL();
+  //     if (_other_gameStatus.tickCount > xTaskGetTickCount()) {
+  //       GAME_set_id(&_game, 1);
+  //     } else {
+  //       GAME_set_id(&_game, 2);
+  //     }
+  //   }
+
+  //   osDelay(GAME_STATUS_WAIT_MS);
+  // }
+
+  // Game loop
+  float dt = (float)(GAME_UPDATE_RATE_MS) / 1000.0f; // sec
   while (1) {
-    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)) {
-      GAME_set_paddle_speed(&_game, -80);
-    } else if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
-      GAME_set_paddle_speed(&_game, 80);
-    } else {
-      GAME_set_paddle_speed(&_game, 0);
-    }
+    GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
+    GAME_update(&_game, dt);
+    DISPLAY_update(&_game);
 
-    GAME_update(&_game, (float)xTaskGetTickCount() / 1000.0f); // s
+    UART_game_to_msg(&_game, &txBuffer);
+    // HAL_UART_Transmit(&huart2, (uint8_t *)&txBuffer, sizeof(struct
+    // UART_GameStatusMsg),10);
 
-    switch (GAME_get_state(&_game)) {
+    // state machine
+    switch (_game.state) {
+    case GAME_STATE_INIT:
+      break;
     case GAME_STATE_CONNECTING:
       break;
     case GAME_STATE_PLAY:
-      GAME_get_ball(&_game, &ball_x, &ball_y, &ball_radius, &ball_color);
-      GAME_get_paddle(&_game, &paddle_x, &paddle_y, &paddle_width, &paddle_height);
-      DISPLAY_draw_ball(ball_x, ball_y, ball_radius, ball_color);
-      DISPLAY_draw_paddle(paddle_x, paddle_y, paddle_width, paddle_height, WHITE);
-
-      DISPLAY_update();
+      if (_game.ball.y > _game.height) {
+        _game.state = GAME_STATE_OVER;
+      }
       break;
     case GAME_STATE_OVER:
-      DISPLAY_game_over();
+      _game.state = GAME_STATE_EXIT;
+      break;
+    case GAME_STATE_EXIT:
       break;
     default:
       break;
     }
-
-    txBuffer.id = 1;
-    txBuffer.state = GAME_get_state(&_game);
-    txBuffer.ball.x = ball_x;
-    txBuffer.ball.y = ball_y;
-    txBuffer.ball.radius = ball_radius;
-    txBuffer.ball.color = ball_color;
-    txBuffer.tickCount = xTaskGetTickCount();
-    (void)txBuffer;
-    // HAL_UART_Transmit(&huart2, (uint8_t *)&txBuffer, sizeof(struct
-    // UART_GameStatusMsg),10);
 
     osDelayUntil(&lastTick, GAME_UPDATE_RATE_MS);
   }

@@ -4,6 +4,7 @@
 extern "C" {
 #endif
 
+#include "game.h"
 #include "lcd.h"
 #include "stdint.h"
 
@@ -11,10 +12,16 @@ extern "C" {
 #define DISPLAY_HEIGHT LCD_Default_Max_PAGE
 
 void DISPLAY_draw_ball(int x, int y, int radius, int color);
+void DISPLAY_draw_ball_from_game(struct GAME_Board *board);
+
 void DISPLAY_draw_paddle(int x, int y, int width, int height, int color);
-void DISPLAY_update();
+void DISPLAY_draw_ball_from_game(struct GAME_Board *board);
+
+void DISPLAY_display();
 
 void DISPLAY_game_over();
+
+void DISPLAY_update(struct GAME_Board *board);
 
 #ifdef __cplusplus
 }

@@ -15,6 +15,7 @@
     "stdlib.h": "c",
     "task.h": "c",
     "usart.h": "c",
-    "freertos.h": "c"
+    "freertos.h": "c",
+    "input_device.h": "c"
   }
 }

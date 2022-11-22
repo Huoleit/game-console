@@ -33,9 +33,11 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "display.h"
 #include "game.h"
+#include "input_device.h"
 #include "lcd.h"
 #include "stdio.h"
 #include "usart.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

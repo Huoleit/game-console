@@ -39,6 +39,7 @@ C_SOURCES =  \
 Core/Src/lcd.c \
 Core/Src/game.c \
 Core/Src/display.c \
+Core/Src/input_device.c \
 Core/Src/main.c \
 Core/Src/gpio.c \
 Core/Src/freertos.c \

@@ -93,8 +93,6 @@ int main(void) {
   /* USER CODE BEGIN 2 */
   LCD_INIT();
   GAME_init(&_game, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-  HAL_UART_Receive_DMA(&huart2, (uint8_t *)&_other_gameStatus,
-                       sizeof(struct UART_GameStatusMsg));
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */

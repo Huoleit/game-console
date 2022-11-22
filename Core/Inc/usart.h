@@ -29,7 +29,7 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "game.h"
 /* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart2;
@@ -52,12 +52,13 @@ struct __attribute__((__packed__)) UART_GameStatusMsg {
 extern uint8_t _other_isConnected;
 extern struct UART_GameStatusMsg _other_gameStatus;
 extern uint32_t _other_lastReceiveTick;
+extern uint8_t _other_gameStatus_isUpdated;
 /* USER CODE END Private defines */
 
 void MX_USART2_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+void UART_game_to_msg(struct GAME_Board *game, struct UART_GameStatusMsg *msg);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
