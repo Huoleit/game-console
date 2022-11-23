@@ -2,6 +2,7 @@
 
 #include "ascii.h"
 #include "math.h"
+#include "main.h"
 
 void LCD_REG_Config(void);
 void LCD_FillColor(uint32_t ulAmout_Point, uint16_t usColor);
@@ -427,4 +428,106 @@ void LCD_DrawCircle(uint16_t usC, uint16_t usP, uint16_t usRadius,
       }
     }
   }
+}
+
+
+
+//LED's draw char function for WS2812B
+void LED_DrawChar ( uint16_t usP, const char charIndex)
+{
+	int pos = usP*8;
+	int r = 10, g = 10, b = 10;
+	int chararray[17][40]= //[no of char][bits for the led]                   note: figure out the odd row inverted issue
+	{
+			{0,1,1,1,1,1,1,0,1,0,1,1,0,0,0,1,1,0,0,1,1,0,0,1,1,0,0,0,1,1,0,1,0,1,1,1,1,1,1,0},//0
+			{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0},//1
+			{1,0,0,0,1,1,1,0,1,0,0,1,1,0,0,1,1,0,1,1,0,0,0,1,1,0,0,0,0,1,1,1,1,1,0,0,0,0,1,0},//2
+			{0,1,1,1,0,1,1,0,1,0,0,1,0,0,0,1,1,0,0,0,1,0,0,1,1,0,0,1,0,0,0,1,0,1,0,0,0,0,1,0},//3
+			{0,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,1,0,0,0,0,1,0,1,1,0,0,1,0,0,0,0,1,1,1,0,0,0},//4
+			{0,1,1,1,0,0,0,1,1,0,0,1,0,0,0,1,1,0,0,0,1,0,0,1,1,0,0,1,0,0,0,1,0,1,0,0,0,1,1,1},//5
+			{0,1,1,1,0,0,1,0,1,0,0,1,0,0,0,1,1,0,0,0,1,0,0,1,1,0,0,1,0,0,0,1,0,1,1,1,1,1,1,0},//6
+			{0,0,0,0,0,0,1,1,1,0,1,1,0,0,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,1,1,1,0,0,0,0,0,0,0,1},//7
+			{0,1,1,0,1,1,1,0,1,0,0,0,1,0,0,1,1,0,0,1,0,0,0,1,1,0,0,0,1,0,0,1,0,1,1,0,1,1,1,0},//8
+			{0,1,1,1,1,1,1,0,1,0,0,0,1,0,0,1,1,0,0,1,0,0,0,1,1,0,0,0,1,0,0,1,0,0,0,0,1,1,1,0},//9
+			{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},//:
+			{0,0,0,0,1,1,1,0,1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,1,0,0,0,1,0,0,0,1,1,1,1,1,1,1,1},//P (player)
+			{0,0,1,1,1,1,1,1,0,0,0,0,0,0,1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1,1,0,0,1,1,1,1,1,1},//W (WIN)
+			{0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0},//I
+			{1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1},//N
+			{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1,0},//C (as oC)
+			{0,1,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,0,0,0,1,1,0,0,0,1,0},//%
+	};
+	int tmp = 0;
+	switch(charIndex){
+		case '0':case '1':case '2':case '3':case '4':case '5':case '6':case '7':case '8':case '9':
+			tmp = (int)charIndex-48;
+			break;
+		case ':':
+			tmp = 10;
+			break;
+		case 'P':
+			tmp = 11;
+			break;
+		case 'W':
+			tmp = 12;
+			break;
+		case 'I':
+			tmp = 13;
+			break;
+		case 'N':
+			tmp = 14;
+			break;
+		case 'C':
+			tmp = 14;
+			break;
+		case '%':
+			tmp = 14;
+			break;
+	}
+	if (usP%2==0){
+		for (int i = 0; i<40; i++){
+			if (chararray[tmp][i]==0)
+				Set_LED(pos++, 0, 0, 0);
+			else
+				Set_LED(pos++, r, g, b);
+		}
+		WS2812_Send();
+	}
+	else{
+		for (int i = 0; i<5; i++){
+			for (int j=7; j>-1;j--){
+				if (chararray[tmp][i*8+j]==0)
+					Set_LED(pos++, 0, 0, 0);
+				else
+					Set_LED(pos++, r, g, b);
+			}//end of j for loop
+		}//end of i for loop
+		WS2812_Send();
+	}//end of else
+
+}
+void LED_Clear(){
+	for (int i = 0; i<MAX_LED;i++){
+		Set_LED(i, 0, 0, 0);
+	}
+//	WS2812_Send();
+}
+void WinScroll(char Winner, uint16_t delayt){
+	int shift = 24;//how many col is shifted into the right side.
+	for (int i = 0; i < 54 ;i++){
+		LED_Clear();
+		if ((i+4-shift < 27)&&(i+4-shift > -1))
+		LED_DrawChar(i+4-shift, 'I');
+		if ((i-shift < 27)&&(i-shift > -1))
+		LED_DrawChar(i-shift, 'N'); //P 1/2 W I N
+		if ((i+8-shift < 27)&&(i+8-shift > -1))
+		LED_DrawChar(i+8-shift, 'W');
+		if ((i+16-shift < 27)&&(i+16-shift > -1))
+		LED_DrawChar(i+16-shift, Winner);
+		if ((i+22-shift < 27)&&(i+22-shift > -1))
+		LED_DrawChar(i+22-shift, 'P');
+		HAL_Delay(delayt);
+	}
+	LED_Clear();
+
 }

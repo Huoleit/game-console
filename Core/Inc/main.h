@@ -38,6 +38,10 @@ extern "C" {
 #include "stdio.h"
 #include "usart.h"
 
+#define MAX_LED 256
+
+void Set_LED (int LEDnum, int Red, int Green, int Blue);
+void WS2812_Send (void);
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

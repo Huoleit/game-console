@@ -231,7 +231,7 @@ void displayFunc(void const *argument) {
       }
       break;
     case GAME_STATE_MY_TURN:
-      GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
+      GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_JOYSTICK, dt));
       GAME_loop(&_game, dt);
       DISPLAY_draw_ball_from_game(&_game);
       DISPLAY_draw_paddle_from_game(&_game);
@@ -249,7 +249,7 @@ void displayFunc(void const *argument) {
 
       break;
     case GAME_STATE_TRANSITION:
-      GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
+      GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_JOYSTICK, dt));
       DISPLAY_draw_paddle_from_game(&_game);
       DISPLAY_display();
 
@@ -261,7 +261,7 @@ void displayFunc(void const *argument) {
       }
       break;
     case GAME_STATE_OTHERS_TURN:
-      GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
+      GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_JOYSTICK, dt));
       DISPLAY_draw_paddle_from_game(&_game);
       DISPLAY_display();
 

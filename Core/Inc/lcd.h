@@ -72,4 +72,5 @@ void LCD_DrawCircle(uint16_t usC, uint16_t usP, uint16_t radius,
                     uint16_t usColor);
 void LCD_DrawRectangle(uint16_t usC, uint16_t usP, uint16_t usWidth,
                        uint16_t usHeight, uint16_t usColor);
+void LED_DrawChar ( uint16_t usP, const char charIndex);
 #endif

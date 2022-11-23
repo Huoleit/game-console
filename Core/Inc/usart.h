@@ -56,7 +56,7 @@ struct __attribute__((__packed__)) UART_GameStatusMsg {
   uint8_t FIXED_FOOTER;
 };
 
-struct UART_GameStatusMsg rxBuffer;
+extern struct UART_GameStatusMsg rxBuffer;
 extern uint8_t _other_isConnected;
 extern struct UART_GameStatusMsg _other_gameStatus;
 extern uint32_t _other_lastReceiveTick;
