@@ -115,7 +115,7 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of Heartbeat */
-  osThreadDef(Heartbeat, heartBeat, osPriorityLow, 0, 128);
+  osThreadDef(Heartbeat, heartBeat, osPriorityNormal, 0, 128);
   HeartbeatHandle = osThreadCreate(osThread(Heartbeat), NULL);
 
   /* definition and creation of display */
@@ -153,11 +153,6 @@ void StartDefaultTask(void const *argument) {
     // LCD_DrawString(20, 50, str);
     // lastTick = xTaskGetTickCount();
 
-    if (GAME_get_id(&_game) == 1) {
-      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-    } else if (GAME_get_id(&_game) == 2) {
-      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_1);
-    }
     osDelay(200);
   }
   /* USER CODE END StartDefaultTask */
@@ -174,7 +169,11 @@ void heartBeat(void const *argument) {
   /* USER CODE BEGIN heartBeat */
   /* Infinite loop */
   for (;;) {
-    // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
+    if (GAME_get_id(&_game) == 1) {
+      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+    } else if (GAME_get_id(&_game) == 2) {
+      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_1);
+    }
 
     osDelay(500);
   }
@@ -195,8 +194,8 @@ void displayFunc(void const *argument) {
   TickType_t lastTick = xTaskGetTickCount();
   // int txFailCount = 0;
   // Game loop
-  float dt = (float)(GAME_UPDATE_RATE_MS) / 1000.0f; // sec
-  while (1) {
+  const float dt = (float)(GAME_UPDATE_RATE_MS) / 1000.0f; // sec
+  for (;;) {
     switch (GAME_get_state(&_game)) {
     case GAME_STATE_INIT:
       DISPLAY_clear();
@@ -205,23 +204,23 @@ void displayFunc(void const *argument) {
     case GAME_STATE_CONNECTING:
       DISPLAY_connecting(dt);
       // id == 0 means just power up
-      // if (_other_isConnected) {
-      //   if (GAME_get_id(&_game) == 0) {
-      //     if (_other_gameStatus.id == 1) {
-      //       GAME_set_id(&_game, 2);
-      //     } else if (_other_gameStatus.id == 2) {
-      //       GAME_set_id(&_game, 1);
-      //     } else { // Both no id
-      //       if (_other_gameStatus.tickCount < xTaskGetTickCount()) {
-      //         GAME_set_id(&_game, 1);
-      //       } else {
-      //         GAME_set_id(&_game, 2);
-      //       }
-      //     }
-      //   }
-      //   DISPLAY_clear();
-      //   GAME_set_state(&_game, GAME_STATE_PLAY);
-      // }
+      if (_other_isConnected) {
+        if (GAME_get_id(&_game) == 0) {
+          if (_other_gameStatus.id == 1) {
+            GAME_set_id(&_game, 2);
+          } else if (_other_gameStatus.id == 2) {
+            GAME_set_id(&_game, 1);
+          } else { // Both no id
+            if (_other_gameStatus.tickCount < xTaskGetTickCount()) {
+              GAME_set_id(&_game, 1);
+            } else {
+              GAME_set_id(&_game, 2);
+            }
+          }
+        }
+        DISPLAY_clear();
+        GAME_set_state(&_game, GAME_STATE_PLAY);
+      }
       break;
     case GAME_STATE_PLAY:
       GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
@@ -246,8 +245,16 @@ void displayFunc(void const *argument) {
     }
 
     UART_game_to_msg(&_game, &txBuffer);
-    HAL_UART_Transmit(&huart5, (uint8_t *)&txBuffer, sizeof(struct UART_GameStatusMsg),
-                      20);
+    // HAL_UART_Transmit(&huart3, (uint8_t *)&txBuffer, sizeof(struct
+    // UART_GameStatusMsg));
+
+    huart3.TxXferCount = 0;
+    while (huart3.TxXferCount < sizeof(struct UART_GameStatusMsg)) {
+      if ((__HAL_UART_GET_FLAG(&huart3, UART_FLAG_TXE) != RESET)) {
+        huart3.Instance->DR = ((uint8_t *)&txBuffer)[huart3.TxXferCount] & 0xFFU;
+        ++huart3.TxXferCount;
+      }
+    }
 
     osDelayUntil(&lastTick, GAME_UPDATE_RATE_MS);
   }
@@ -264,7 +271,7 @@ void displayFunc(void const *argument) {
 void uartRead(void const *argument) {
   /* USER CODE BEGIN uartRead */
   /* Infinite loop */
-  const TickType_t xDisconnectTimeout = pdMS_TO_TICKS(GAME_UPDATE_RATE_MS * 2);
+  const TickType_t xDisconnectTimeout = pdMS_TO_TICKS(GAME_STATUS_TIMEOUT_MS);
   uint32_t ulNotifiedValue;
   TickType_t lastTick = xTaskGetTickCount();
 

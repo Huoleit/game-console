@@ -19,6 +19,7 @@
     "input_device.h": "c"
   },
   "cSpell.words": [
+    "huart3",
     "USART"
   ]
 }

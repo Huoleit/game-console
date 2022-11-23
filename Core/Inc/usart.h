@@ -32,9 +32,9 @@ extern "C" {
 #include "game.h"
 /* USER CODE END Includes */
 
-extern UART_HandleTypeDef huart5;
-
 extern UART_HandleTypeDef huart2;
+
+extern UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN Private defines */
 
@@ -63,8 +63,8 @@ extern uint32_t _other_lastReceiveTick;
 extern uint8_t _other_gameStatus_isUpdated;
 /* USER CODE END Private defines */
 
-void MX_UART5_Init(void);
 void MX_USART2_UART_Init(void);
+void MX_USART3_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 void UART_game_to_msg(struct GAME_Board *game, struct UART_GameStatusMsg *msg);
@@ -75,3 +75,4 @@ void UART_game_to_msg(struct GAME_Board *game, struct UART_GameStatusMsg *msg);
 #endif
 
 #endif /* __USART_H__ */
+
