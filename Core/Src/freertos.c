@@ -218,25 +218,64 @@ void displayFunc(void const *argument) {
             }
           }
         }
+        if (GAME_get_prvState(&_game) == GAME_STATE_INIT) {
+          if (GAME_get_id(&_game) == 1) {
+            GAME_set_state(&_game, GAME_STATE_MY_TURN);
+          } else if (GAME_get_id(&_game) == 2) {
+            GAME_set_state(&_game, GAME_STATE_OTHERS_TURN);
+          }
+        } else {
+          GAME_set_state(&_game, GAME_get_prvState(&_game));
+        }
         DISPLAY_clear();
-        GAME_set_state(&_game, GAME_STATE_PLAY);
       }
       break;
-    case GAME_STATE_PLAY:
+    case GAME_STATE_MY_TURN:
       GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
       GAME_loop(&_game, dt);
       DISPLAY_draw_ball_from_game(&_game);
       DISPLAY_draw_paddle_from_game(&_game);
       DISPLAY_display();
 
-      if (_game.ball.y > _game.height) {
-        DISPLAY_game_over();
-        GAME_set_state(&_game, GAME_STATE_OVER);
-      }
       if (!_other_isConnected) {
         DISPLAY_clear();
         GAME_set_state(&_game, GAME_STATE_CONNECTING);
+      } else if (_game.ball.y > _game.height) {
+        DISPLAY_game_over();
+        GAME_set_state(&_game, GAME_STATE_OVER);
+      } else if (_game.ball.y < 0) {
+        GAME_set_state(&_game, GAME_STATE_TRANSITION);
       }
+
+      break;
+    case GAME_STATE_TRANSITION:
+      GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
+      DISPLAY_draw_paddle_from_game(&_game);
+      DISPLAY_display();
+
+      if (!_other_isConnected) {
+        DISPLAY_clear();
+        GAME_set_state(&_game, GAME_STATE_CONNECTING);
+      } else if (_other_gameStatus.state == GAME_STATE_MY_TURN) {
+        GAME_set_state(&_game, GAME_STATE_OTHERS_TURN);
+      }
+      break;
+    case GAME_STATE_OTHERS_TURN:
+      GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
+      DISPLAY_draw_paddle_from_game(&_game);
+      DISPLAY_display();
+
+      if (!_other_isConnected) {
+        DISPLAY_clear();
+        GAME_set_state(&_game, GAME_STATE_CONNECTING);
+      } else if (_other_gameStatus.state == GAME_STATE_TRANSITION) {
+        UART_msg_to_game(&_other_gameStatus, &_game);
+        GAME_set_state(&_game, GAME_STATE_MY_TURN);
+      } else if (_other_gameStatus.state == GAME_STATE_OVER) {
+        DISPLAY_game_over();
+        GAME_set_state(&_game, GAME_STATE_OVER);
+      }
+
       break;
     case GAME_STATE_OVER:
       break;
@@ -245,8 +284,6 @@ void displayFunc(void const *argument) {
     }
 
     UART_game_to_msg(&_game, &txBuffer);
-    // HAL_UART_Transmit(&huart3, (uint8_t *)&txBuffer, sizeof(struct
-    // UART_GameStatusMsg));
 
     huart3.TxXferCount = 0;
     while (huart3.TxXferCount < sizeof(struct UART_GameStatusMsg)) {

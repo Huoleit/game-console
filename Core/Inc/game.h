@@ -11,13 +11,15 @@ extern "C" {
 #define GAME_UPDATE_RATE_MS 34
 #define GAME_STATUS_RECEIVE_TIMEOUT_MS 25
 #define GAME_STATUS_WAIT_MS (GAME_UPDATE_RATE_MS - GAME_STATUS_RECEIVE_TIMEOUT_MS)
-#define GAME_STATUS_TIMEOUT_MS 1500
+#define GAME_STATUS_TIMEOUT_MS 1000
 #define GAME_STATUS_TIMEOUT_FAIL_COUNT (GAME_STATUS_TIMEOUT_MS / GAME_UPDATE_RATE_MS)
 
 enum GAME_State {
   GAME_STATE_INIT,
   GAME_STATE_CONNECTING,
-  GAME_STATE_PLAY,
+  GAME_STATE_MY_TURN,
+  GAME_STATE_TRANSITION,
+  GAME_STATE_OTHERS_TURN,
   GAME_STATE_OVER
 };
 
@@ -33,7 +35,7 @@ struct GAME_Board {
   int boundaryCount;
 
   struct {
-    uint16_t x, y;
+    int16_t x, y;
     float dx, dy; // Norm vector
     float radius;
     uint16_t color;
@@ -46,6 +48,7 @@ struct GAME_Board {
   } paddle;
 
   enum GAME_State state;
+  enum GAME_State prvState;
   uint8_t id;
 };
 
@@ -57,6 +60,7 @@ void GAME_get_ball(struct GAME_Board *board, int *x, int *y, int *radius,
                    uint32_t *color);
 void GAME_get_paddle(struct GAME_Board *board, int *x, int *y, int *width, int *height);
 int GAME_get_state(struct GAME_Board *board);
+int GAME_get_prvState(struct GAME_Board *board);
 int GAME_get_id(struct GAME_Board *board);
 
 void GAME_set_id(struct GAME_Board *board, int id);

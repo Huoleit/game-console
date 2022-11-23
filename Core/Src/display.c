@@ -78,12 +78,14 @@ void DISPLAY_connecting(float dt) {
 void DISPLAY_clear() { LCD_Clear(0, 0, 240, 320, BACKGROUND); }
 
 void DISPLAY_display() {
+  if (lastBall.valid) {
+    LCD_DrawCircle(lastBall.x, lastBall.y, lastBall.radius, BACKGROUND);
+    lastBall.valid = 0;
+  }
   if (currentBall.valid) {
-    if (lastBall.valid) {
-      LCD_DrawCircle(lastBall.x, lastBall.y, lastBall.radius, BACKGROUND);
-    }
     LCD_DrawCircle(currentBall.x, currentBall.y, currentBall.radius, currentBall.color);
     lastBall = currentBall;
+    currentBall.valid = 0;
   }
   if (currentPaddle.valid) {
     if (lastPaddle.valid) {

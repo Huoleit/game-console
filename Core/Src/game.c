@@ -85,9 +85,6 @@ void GAME_loop(struct GAME_Board *board, float dt) {
   if (board->ball.x > board->width) {
     board->ball.x = board->width;
   }
-  if (board->ball.y < 0) {
-    board->ball.y = 0;
-  }
 
   // Paddle
   // board->paddle.x += board->paddle.speed * dt;
@@ -126,14 +123,14 @@ void GAME_init(struct GAME_Board *board, int width, int height) {
   board->paddle.width = 50;
 
   board->boundaries = _boundaries;
-  board->boundaryCount = 3;
+  board->boundaryCount = 2;
   board->boundaries[0] = init_boundary(1, 0, 0, 0);      // Left
-  board->boundaries[1] = init_boundary(0, 1, 0, 0);      // Top
-  board->boundaries[2] = init_boundary(-1, 0, width, 0); // Right
+  board->boundaries[1] = init_boundary(-1, 0, width, 0); // Right
+  // board->boundaries[2] = init_boundary(0, 1, 0, 0);      // Top
   // board->boundaries[3] = init_boundary(0, -1, 0, height);  // Bottom
 
 #ifdef GAME_SINGLE_PLAYER
-  board->state = GAME_STATE_PLAY;
+  board->state = GAME_STATE_MY_TURN;
 #else
   board->state = GAME_STATE_INIT;
 #endif
@@ -142,7 +139,10 @@ void GAME_init(struct GAME_Board *board, int width, int height) {
 void GAME_update(struct GAME_Board *board, float dt) {}
 
 void GAME_set_id(struct GAME_Board *board, int id) { board->id = id; }
-void GAME_set_state(struct GAME_Board *board, int state) { board->state = state; }
+void GAME_set_state(struct GAME_Board *board, int state) {
+  board->prvState = board->state;
+  board->state = state;
+}
 void GAME_set_paddle_speed(struct GAME_Board *board, float speed) {
   board->paddle.speed = speed;
 }
@@ -174,4 +174,5 @@ void GAME_get_paddle(struct GAME_Board *board, int *x, int *y, int *width, int *
 
 // get the state of game
 int GAME_get_state(struct GAME_Board *board) { return board->state; }
+int GAME_get_prvState(struct GAME_Board *board) { return board->prvState; }
 int GAME_get_id(struct GAME_Board *board) { return board->id; }

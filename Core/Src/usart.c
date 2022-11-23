@@ -235,4 +235,20 @@ void UART_game_to_msg(struct GAME_Board *game, struct UART_GameStatusMsg *msg) {
   msg->FIXED_HEADER = USART_FIXED_HEADER;
   msg->FIXED_FOOTER = USART_FIXED_FOOTER;
 }
+
+void UART_msg_to_game(struct UART_GameStatusMsg *msg, struct GAME_Board *game) {
+  game->ball.x = msg->ball.x;
+  game->ball.y = msg->ball.y;
+  game->ball.dx = msg->ball.dx;
+  game->ball.dy = msg->ball.dy;
+  game->ball.radius = msg->ball.radius;
+  game->ball.color = msg->ball.color;
+
+  if (game->ball.y < 0) {
+    game->ball.y = -game->ball.y;
+  }
+  if (game->ball.dy < 0) {
+    game->ball.dy = -game->ball.dy;
+  }
+}
 /* USER CODE END 1 */

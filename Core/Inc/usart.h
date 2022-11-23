@@ -46,7 +46,7 @@ struct __attribute__((__packed__)) UART_GameStatusMsg {
   uint8_t state;
 
   struct __attribute__((__packed__)) {
-    uint16_t x, y;
+    int16_t x, y;
     float dx, dy; // Norm vector
     float radius;
     uint16_t color;
@@ -68,6 +68,7 @@ void MX_USART3_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 void UART_game_to_msg(struct GAME_Board *game, struct UART_GameStatusMsg *msg);
+void UART_msg_to_game(struct UART_GameStatusMsg *msg, struct GAME_Board *game);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
@@ -75,4 +76,3 @@ void UART_game_to_msg(struct GAME_Board *game, struct UART_GameStatusMsg *msg);
 #endif
 
 #endif /* __USART_H__ */
-
