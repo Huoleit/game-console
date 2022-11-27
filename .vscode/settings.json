@@ -16,7 +16,13 @@
     "task.h": "c",
     "usart.h": "c",
     "freertos.h": "c",
-    "input_device.h": "c"
+    "input_device.h": "c",
+    "cmath": "c",
+    "*.tcc": "c",
+    "cinttypes": "c",
+    "cstdlib": "c",
+    "ieeefp.h": "c",
+    "stdio.h": "c"
   },
   "cSpell.words": [
     "huart3",

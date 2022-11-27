@@ -18,12 +18,12 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
 #include "cmsis_os.h"
 #include "dma.h"
 #include "fsmc.h"
 #include "gpio.h"
 #include "usart.h"
-
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -92,9 +92,35 @@ int main(void) {
   MX_FSMC_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   LCD_INIT();
+  INPUT_init();
   GAME_init(&_game, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+
+  // char str[20];
+  // LCD_DrawString(20, 20, "Dec");
+  // while (1) {
+  //   AverageFilter_add(&sliderFilter, INPUT_adc_read[0]);
+  //   AverageFilter_add(&knobFilter, INPUT_adc_read[1]);
+  //   AverageFilter_add(&joystickFilter, INPUT_adc_read[2]);
+
+  //   sprintf(str, "%4lu", AverageFilter_get(&sliderFilter));
+  //   LCD_DrawString(20, 40, str);
+  //   sprintf(str, "%4lu", AverageFilter_get(&knobFilter));
+  //   LCD_DrawString(100, 40, str);
+  //   sprintf(str, "%4lu", AverageFilter_get(&joystickFilter));
+  //   LCD_DrawString(180, 40, str);
+
+  //   sprintf(str, "%4lu", AverageFilter_sumOfDifference(&sliderFilter));
+  //   LCD_DrawString(20, 120, str);
+  //   sprintf(str, "%4lu", AverageFilter_sumOfDifference(&knobFilter));
+  //   LCD_DrawString(100, 120, str);
+  //   sprintf(str, "%4lu", AverageFilter_sumOfDifference(&joystickFilter));
+  //   LCD_DrawString(180, 120, str);
+
+  //   HAL_Delay(10);
+  // }
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
@@ -121,6 +147,7 @@ int main(void) {
 void SystemClock_Config(void) {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
    * in the RCC_OscInitTypeDef structure.
@@ -146,6 +173,11 @@ void SystemClock_Config(void) {
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV8;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
     Error_Handler();
   }
 }

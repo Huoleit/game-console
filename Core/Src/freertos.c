@@ -48,9 +48,9 @@
 
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
-osThreadId HeartbeatHandle;
-osThreadId displayHandle;
-osThreadId ReaderHandle;
+osThreadId GameTaskHandle;
+osThreadId UartTaskHandle;
+osThreadId InputTaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -58,9 +58,9 @@ osThreadId ReaderHandle;
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void const *argument);
-void heartBeat(void const *argument);
-void displayFunc(void const *argument);
-void uartRead(void const *argument);
+void gameTaskFunc(void const *argument);
+void uartTaskFunc(void const *argument);
+void InputTaskFunc(void const *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -111,20 +111,20 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityLow, 0, 128);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
-  /* definition and creation of Heartbeat */
-  osThreadDef(Heartbeat, heartBeat, osPriorityNormal, 0, 128);
-  HeartbeatHandle = osThreadCreate(osThread(Heartbeat), NULL);
+  /* definition and creation of GameTask */
+  osThreadDef(GameTask, gameTaskFunc, osPriorityNormal, 0, 128);
+  GameTaskHandle = osThreadCreate(osThread(GameTask), NULL);
 
-  /* definition and creation of display */
-  osThreadDef(display, displayFunc, osPriorityNormal, 0, 128);
-  displayHandle = osThreadCreate(osThread(display), NULL);
+  /* definition and creation of UartTask */
+  osThreadDef(UartTask, uartTaskFunc, osPriorityAboveNormal, 0, 128);
+  UartTaskHandle = osThreadCreate(osThread(UartTask), NULL);
 
-  /* definition and creation of Reader */
-  osThreadDef(Reader, uartRead, osPriorityAboveNormal, 0, 128);
-  ReaderHandle = osThreadCreate(osThread(Reader), NULL);
+  /* definition and creation of InputTask */
+  osThreadDef(InputTask, InputTaskFunc, osPriorityHigh, 0, 128);
+  InputTaskHandle = osThreadCreate(osThread(InputTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -140,34 +140,6 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const *argument) {
   /* USER CODE BEGIN StartDefaultTask */
-  /* Infinite loop */
-  // char str[20];
-  // TickType_t lastTick = 0;
-  for (;;) {
-    // TickType_t curTick = xTaskGetTickCount();
-
-    // sprintf(str, "%10lu", curTick);
-    // LCD_DrawString(20, 20, str);
-
-    // sprintf(str, "%10lu", curTick - lastTick);
-    // LCD_DrawString(20, 50, str);
-    // lastTick = xTaskGetTickCount();
-
-    osDelay(200);
-  }
-  /* USER CODE END StartDefaultTask */
-}
-
-/* USER CODE BEGIN Header_heartBeat */
-/**
- * @brief Function implementing the Heartbeat thread.
- * @param argument: Not used
- * @retval None
- */
-/* USER CODE END Header_heartBeat */
-void heartBeat(void const *argument) {
-  /* USER CODE BEGIN heartBeat */
-  /* Infinite loop */
   for (;;) {
     if (GAME_get_id(&_game) == 1) {
       HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
@@ -177,18 +149,18 @@ void heartBeat(void const *argument) {
 
     osDelay(500);
   }
-  /* USER CODE END heartBeat */
+  /* USER CODE END StartDefaultTask */
 }
 
-/* USER CODE BEGIN Header_displayFunc */
+/* USER CODE BEGIN Header_gameTaskFunc */
 /**
- * @brief Function implementing the display thread.
+ * @brief Function implementing the GameTask thread.
  * @param argument: Not used
  * @retval None
  */
-/* USER CODE END Header_displayFunc */
-void displayFunc(void const *argument) {
-  /* USER CODE BEGIN displayFunc */
+/* USER CODE END Header_gameTaskFunc */
+void gameTaskFunc(void const *argument) {
+  /* USER CODE BEGIN gameTaskFunc */
   /* Infinite loop */
   struct UART_GameStatusMsg txBuffer;
   TickType_t lastTick = xTaskGetTickCount();
@@ -231,7 +203,7 @@ void displayFunc(void const *argument) {
       }
       break;
     case GAME_STATE_MY_TURN:
-      GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
+      GAME_set_paddle_pos(&_game, INPUT_get_x(dt));
       GAME_loop(&_game, dt);
       DISPLAY_draw_ball_from_game(&_game);
       DISPLAY_draw_paddle_from_game(&_game);
@@ -256,7 +228,7 @@ void displayFunc(void const *argument) {
 
       break;
     case GAME_STATE_TRANSITION:
-      GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
+      GAME_set_paddle_pos(&_game, INPUT_get_x(dt));
       DISPLAY_draw_paddle_from_game(&_game);
       DISPLAY_display();
 
@@ -268,7 +240,7 @@ void displayFunc(void const *argument) {
       }
       break;
     case GAME_STATE_OTHERS_TURN:
-      GAME_set_paddle_pos(&_game, INPUT_get_x(INPUT_DEVICE_BUTTON, dt));
+      GAME_set_paddle_pos(&_game, INPUT_get_x(dt));
       DISPLAY_draw_paddle_from_game(&_game);
       DISPLAY_display();
 
@@ -302,18 +274,18 @@ void displayFunc(void const *argument) {
 
     osDelayUntil(&lastTick, GAME_UPDATE_RATE_MS);
   }
-  /* USER CODE END displayFunc */
+  /* USER CODE END gameTaskFunc */
 }
 
-/* USER CODE BEGIN Header_uartRead */
+/* USER CODE BEGIN Header_uartTaskFunc */
 /**
- * @brief Function implementing the Reader thread.
+ * @brief Function implementing the UartTask thread.
  * @param argument: Not used
  * @retval None
  */
-/* USER CODE END Header_uartRead */
-void uartRead(void const *argument) {
-  /* USER CODE BEGIN uartRead */
+/* USER CODE END Header_uartTaskFunc */
+void uartTaskFunc(void const *argument) {
+  /* USER CODE BEGIN uartTaskFunc */
   /* Infinite loop */
   const TickType_t xDisconnectTimeout = pdMS_TO_TICKS(GAME_STATUS_TIMEOUT_MS);
   uint32_t ulNotifiedValue;
@@ -351,7 +323,24 @@ void uartRead(void const *argument) {
       taskEXIT_CRITICAL();
     }
   }
-  /* USER CODE END uartRead */
+  /* USER CODE END uartTaskFunc */
+}
+
+/* USER CODE BEGIN Header_InputTaskFunc */
+/**
+ * @brief Function implementing the InputTask thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_InputTaskFunc */
+void InputTaskFunc(void const *argument) {
+  /* USER CODE BEGIN InputTaskFunc */
+  /* Infinite loop */
+  for (;;) {
+    INPUT_loop();
+    osDelay(10);
+  }
+  /* USER CODE END InputTaskFunc */
 }
 
 /* Private application code --------------------------------------------------*/

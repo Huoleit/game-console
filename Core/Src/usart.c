@@ -26,7 +26,7 @@
 #include "string.h"
 #include "task.h"
 
-extern osThreadId ReaderHandle;
+extern osThreadId UartTaskHandle;
 
 uint8_t _other_isConnected;
 uint8_t _other_gameStatus_isUpdated;
@@ -214,7 +214,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
   BaseType_t xHigherPriorityTaskWoken;
   xHigherPriorityTaskWoken = pdFALSE;
   if (huart->Instance == USART2) {
-    vTaskNotifyGiveFromISR(ReaderHandle, &xHigherPriorityTaskWoken);
+    vTaskNotifyGiveFromISR(UartTaskHandle, &xHigherPriorityTaskWoken);
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
   }
 }

@@ -76,3 +76,4 @@ void UART_msg_to_game(struct UART_GameStatusMsg *msg, struct GAME_Board *game);
 #endif
 
 #endif /* __USART_H__ */
+
