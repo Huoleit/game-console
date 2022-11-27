@@ -144,3 +144,5 @@ float INPUT_get_x(float dt) {
 
   return _last_x;
 }
+
+int INPUT_get_device_type() { return INPUT_device_type; }

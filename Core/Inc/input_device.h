@@ -20,6 +20,7 @@ extern uint32_t INPUT_adc_read[3];
 void INPUT_init();
 void INPUT_loop();
 float INPUT_get_x(float dt); // x \in [0,1]
+int INPUT_get_device_type();
 
 struct AverageFilter;
 extern struct AverageFilter sliderFilter;

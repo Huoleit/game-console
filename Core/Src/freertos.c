@@ -163,6 +163,8 @@ void gameTaskFunc(void const *argument) {
   /* USER CODE BEGIN gameTaskFunc */
   /* Infinite loop */
   struct UART_GameStatusMsg txBuffer;
+  int startHaptic = 0;
+  uint32_t startHapticTick = 0;
   TickType_t lastTick = xTaskGetTickCount();
   // int txFailCount = 0;
   // Game loop
@@ -204,7 +206,10 @@ void gameTaskFunc(void const *argument) {
       break;
     case GAME_STATE_MY_TURN:
       GAME_set_paddle_pos(&_game, INPUT_get_x(dt));
-      GAME_loop(&_game, dt);
+      if (GAME_loop(&_game, dt) && INPUT_get_device_type() == INPUT_DEVICE_SLIDER &&
+          startHaptic == 0) {
+        startHaptic = 1;
+      }
       DISPLAY_draw_ball_from_game(&_game);
       DISPLAY_draw_paddle_from_game(&_game);
       DISPLAY_display();
@@ -270,6 +275,15 @@ void gameTaskFunc(void const *argument) {
         huart3.Instance->DR = ((uint8_t *)&txBuffer)[huart3.TxXferCount] & 0xFFU;
         ++huart3.TxXferCount;
       }
+    }
+
+    if (startHaptic == 1) {
+      startHaptic = 2;
+      startHapticTick = xTaskGetTickCount();
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
+    } else if (startHaptic == 2 && xTaskGetTickCount() - startHapticTick > 200) {
+      startHaptic = 0;
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
     }
 
     osDelayUntil(&lastTick, GAME_UPDATE_RATE_MS);

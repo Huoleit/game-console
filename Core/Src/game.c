@@ -37,8 +37,10 @@ static struct GAME_Boundary init_boundary(float u, float v, float x, float y) {
   return b;
 }
 
-void GAME_loop(struct GAME_Board *board, float dt) {
+int GAME_loop(struct GAME_Board *board, float dt) {
   // Ball
+  int isBounced = 0;
+
   float x = board->ball.x + board->ball.dx * dt; // intermediate pos
   float y = board->ball.y + board->ball.dy * dt;
   float dx = board->ball.dx;
@@ -107,8 +109,11 @@ void GAME_loop(struct GAME_Board *board, float dt) {
       board->ball.y = board->height - board->paddle.hight - board->ball.radius - 2;
       board->ball.dy = -board->ball.dy;
       board->ball.color = rand() % 0xFFFF;
+      isBounced = 1;
     }
   }
+
+  return isBounced;
 }
 
 void GAME_init(struct GAME_Board *board, int width, int height) {
