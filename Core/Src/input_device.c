@@ -116,11 +116,11 @@ void INPUT_loop() {
   AverageFilter_add(&knobFilter, INPUT_adc_read[ADC_KNOB_INDEX]);
   AverageFilter_add(&joystickFilter, INPUT_adc_read[ADC_JOYSTICK_INDEX]);
 
-  if (AverageFilter_sumOfDifference(&sliderFilter) > 300) {
+  if (AverageFilter_sumOfDifference(&sliderFilter) > 800) {
     INPUT_device_type = INPUT_DEVICE_SLIDER;
-  } else if (AverageFilter_sumOfDifference(&knobFilter) > 300) {
+  } else if (AverageFilter_sumOfDifference(&knobFilter) > 800) {
     INPUT_device_type = INPUT_DEVICE_KNOB;
-  } else if (AverageFilter_sumOfDifference(&joystickFilter) > 300) {
+  } else if (AverageFilter_sumOfDifference(&joystickFilter) > 800) {
     INPUT_device_type = INPUT_DEVICE_JOYSTICK;
   } else if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) ||
              HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
