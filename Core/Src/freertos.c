@@ -237,6 +237,12 @@ void displayFunc(void const *argument) {
       DISPLAY_draw_paddle_from_game(&_game);
       DISPLAY_display();
 
+#ifdef GAME_SINGLE_PLAYER
+      if (_game.ball.y > _game.height) {
+        DISPLAY_game_over();
+        GAME_set_state(&_game, GAME_STATE_OVER);
+      }
+#else
       if (!_other_isConnected) {
         DISPLAY_clear();
         GAME_set_state(&_game, GAME_STATE_CONNECTING);
@@ -246,6 +252,7 @@ void displayFunc(void const *argument) {
       } else if (_game.ball.y < 0) {
         GAME_set_state(&_game, GAME_STATE_TRANSITION);
       }
+#endif
 
       break;
     case GAME_STATE_TRANSITION:

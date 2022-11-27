@@ -85,6 +85,11 @@ void GAME_loop(struct GAME_Board *board, float dt) {
   if (board->ball.x > board->width) {
     board->ball.x = board->width;
   }
+#ifdef GAME_SINGLE_PLAYER
+  if (board->ball.y < 0) {
+    board->ball.y = 0;
+  }
+#endif
 
   // Paddle
   // board->paddle.x += board->paddle.speed * dt;
@@ -123,16 +128,20 @@ void GAME_init(struct GAME_Board *board, int width, int height) {
   board->paddle.width = 50;
 
   board->boundaries = _boundaries;
-  board->boundaryCount = 2;
-  board->boundaries[0] = init_boundary(1, 0, 0, 0);      // Left
-  board->boundaries[1] = init_boundary(-1, 0, width, 0); // Right
-  // board->boundaries[2] = init_boundary(0, 1, 0, 0);      // Top
+
   // board->boundaries[3] = init_boundary(0, -1, 0, height);  // Bottom
 
 #ifdef GAME_SINGLE_PLAYER
   board->state = GAME_STATE_MY_TURN;
+  board->boundaryCount = 3;
+  board->boundaries[0] = init_boundary(1, 0, 0, 0);      // Left
+  board->boundaries[1] = init_boundary(-1, 0, width, 0); // Right
+  board->boundaries[2] = init_boundary(0, 1, 0, 0);      // Top
 #else
   board->state = GAME_STATE_INIT;
+  board->boundaryCount = 2;
+  board->boundaries[0] = init_boundary(1, 0, 0, 0);      // Left
+  board->boundaries[1] = init_boundary(-1, 0, width, 0); // Right
 #endif
 }
 
