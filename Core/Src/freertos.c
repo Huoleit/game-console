@@ -350,9 +350,11 @@ void uartTaskFunc(void const *argument) {
 void InputTaskFunc(void const *argument) {
   /* USER CODE BEGIN InputTaskFunc */
   /* Infinite loop */
+  TickType_t lastTick = xTaskGetTickCount();
   for (;;) {
     INPUT_loop();
-    osDelay(10);
+
+    osDelayUntil(&lastTick, GAME_UPDATE_RATE_MS / 3);
   }
   /* USER CODE END InputTaskFunc */
 }
