@@ -262,6 +262,7 @@ void gameTaskFunc(void const *argument) {
 
       break;
     case GAME_STATE_OVER:
+      WinShow('1');
       break;
     default:
       break;

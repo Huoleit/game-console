@@ -23,6 +23,7 @@
 #include "dma.h"
 #include "fsmc.h"
 #include "gpio.h"
+#include "tim.h"
 #include "usart.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -93,6 +94,7 @@ int main(void) {
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_ADC1_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   LCD_INIT();
   INPUT_init();
