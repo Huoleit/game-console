@@ -22,7 +22,9 @@
     "cinttypes": "c",
     "cstdlib": "c",
     "ieeefp.h": "c",
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "mpu6050.h": "c",
+    "i2c.h": "c"
   },
   "cSpell.words": [
     "huart3",

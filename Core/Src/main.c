@@ -23,7 +23,9 @@
 #include "dma.h"
 #include "fsmc.h"
 #include "gpio.h"
+#include "i2c.h"
 #include "usart.h"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -93,6 +95,7 @@ int main(void) {
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_ADC1_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   LCD_INIT();
   INPUT_init();
