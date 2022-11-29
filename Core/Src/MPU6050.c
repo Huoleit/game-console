@@ -7,6 +7,8 @@
 #include <main.h>
 #include <stdio.h>
 
+static uint8_t IMU_Y_data[2];
+
 void mpu_init() {
   HAL_StatusTypeDef ret = HAL_I2C_IsDeviceReady(&hi2c2, (0x68 << 1), 1, 100);
   if (ret == HAL_OK) {
@@ -27,20 +29,21 @@ void mpu_init() {
   HAL_I2C_Mem_Write(&hi2c2, (0x68 << 1), 0x6B, 1, &gyrosetting, 1, 100);
 }
 
+void IMU_Start_reading() {
+  HAL_I2C_Mem_Read_IT(&hi2c2, (0x68 << 1), 0x3D, 1, IMU_Y_data, 2);
+}
+
 float mpu_readX() {
-  uint8_t data[2];
-  uint16_t xaxis;
-  HAL_I2C_Mem_Read(&hi2c2, (0x68 << 1), 0x3D, 1, data, 2, 100);
-  xaxis = ((int16_t)data[0] << 8) + data[1];
+  uint16_t y_axis = ((int16_t)IMU_Y_data[0] << 8) + IMU_Y_data[1];
   float range = 0.0;
-  if (xaxis > 18000.0 && xaxis < 58000) {
+  if (y_axis > 18000.0 && y_axis < 58000) {
     range = 0.0;
-  } else if (xaxis > 8000 && xaxis < 18000.0) {
+  } else if (y_axis > 8000 && y_axis < 18000.0) {
     range = 1.0;
-  } else if (xaxis >= 0 && xaxis < 8000) {
-    range = 0.5 + (xaxis / 8000.0) / 2;
-  } else if (xaxis > 58000 && xaxis < 65536) {
-    range = (xaxis - 58000.0) / 7500.0 / 2;
+  } else if (y_axis >= 0 && y_axis < 8000) {
+    range = 0.5 + (y_axis / 8000.0) / 2;
+  } else if (y_axis > 58000 && y_axis < 65536) {
+    range = (y_axis - 58000.0) / 7500.0 / 2;
   }
   return range;
 }

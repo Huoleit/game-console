@@ -24,7 +24,8 @@
     "ieeefp.h": "c",
     "stdio.h": "c",
     "mpu6050.h": "c",
-    "i2c.h": "c"
+    "i2c.h": "c",
+    "limits": "c"
   },
   "cSpell.words": [
     "huart3",

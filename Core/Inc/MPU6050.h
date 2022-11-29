@@ -5,8 +5,9 @@
 extern "C" {
 #endif
 
-void mpu_init();
-float mpu_readX();
+void IMU_init();
+float IMU_readX();
+void IMU_Start_reading();
 
 #ifdef __cplusplus
 }
