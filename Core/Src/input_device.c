@@ -1,7 +1,7 @@
 #include "input_device.h"
 
+#include "MPU6050.h"
 #include "stm32f1xx_hal.h"
-
 #include <stdlib.h>
 
 #define ADC_SLIDER_INDEX 0
@@ -14,7 +14,7 @@ uint32_t INPUT_adc_read[3];
 
 // Global Input Device State
 static float _last_x = 0.5;
-enum INPUT_DeviceType INPUT_device_type = INPUT_DEVICE_NONE;
+enum INPUT_DeviceType INPUT_device_type = INPUT_DEVICE_BUTTON;
 
 struct AverageFilter {
   uint32_t samples[AVERAGE_COUNT];
@@ -25,6 +25,7 @@ struct AverageFilter {
 struct AverageFilter sliderFilter;
 struct AverageFilter knobFilter;
 struct AverageFilter joystickFilter;
+struct AverageFilter imuFilter;
 
 void AverageFilter_init(struct AverageFilter *filter) {
   filter->sum = 0;
@@ -86,6 +87,17 @@ static float knob(float dt) {
   return x;
 }
 
+static float imu(float dt) {
+  float x = (float)AverageFilter_get(&imuFilter) / 4095.0;
+
+  if (x < 0) {
+    x = 0.0;
+  } else if (x > 1) {
+    x = 1.0;
+  }
+  return x;
+}
+
 static float button(float dt) {
   float speed = 1.0f;
   float x = _last_x;
@@ -109,9 +121,17 @@ void INPUT_init() {
   AverageFilter_init(&sliderFilter);
   AverageFilter_init(&joystickFilter);
   AverageFilter_init(&knobFilter);
+  AverageFilter_init(&imuFilter);
+
+  IMU_init();
 }
 
 void INPUT_loop() {
+  if (IMU_isReady()) {
+    IMU_Start_reading();
+    AverageFilter_add(&imuFilter, IMU_readX() * 4095.0f);
+  }
+
   AverageFilter_add(&sliderFilter, INPUT_adc_read[ADC_SLIDER_INDEX]);
   AverageFilter_add(&knobFilter, INPUT_adc_read[ADC_KNOB_INDEX]);
   AverageFilter_add(&joystickFilter, INPUT_adc_read[ADC_JOYSTICK_INDEX]);
@@ -125,6 +145,8 @@ void INPUT_loop() {
   } else if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) ||
              HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)) {
     INPUT_device_type = INPUT_DEVICE_BUTTON;
+  } else if (IMU_isReady() && AverageFilter_sumOfDifference(&imuFilter) > 800) {
+    INPUT_device_type = INPUT_DEVICE_IMU;
   }
 }
 
@@ -138,6 +160,8 @@ float INPUT_get_x(float dt) {
     return _last_x = knob(dt);
   case INPUT_DEVICE_JOYSTICK:
     return _last_x = joystick(dt);
+  case INPUT_DEVICE_IMU:
+    return _last_x = imu(dt);
   default:
     break;
   }

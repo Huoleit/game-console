@@ -37,6 +37,7 @@ extern "C" {
 #include "lcd.h"
 #include "stdio.h"
 #include "usart.h"
+#include "MPU6050.h"
 
 /* USER CODE END Includes */
 

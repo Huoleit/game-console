@@ -8,32 +8,26 @@
 #include <stdio.h>
 
 static uint8_t IMU_Y_data[2];
+uint8_t hasIMU;
 
-void mpu_init() {
-  HAL_StatusTypeDef ret = HAL_I2C_IsDeviceReady(&hi2c2, (0x68 << 1), 1, 100);
+void IMU_init() {
+  HAL_StatusTypeDef ret = HAL_I2C_IsDeviceReady(&hi2c2, (0x68 << 1), 5, 100);
   if (ret == HAL_OK) {
-    LCD_DrawString(60, 160, "HAL_OK");
-    LCD_DrawString(60, 180, "            ");
+    hasIMU = 1;
+    uint8_t gyroSetting = 0b00001000; // accelerometer setting
+    ret = HAL_I2C_Mem_Write(&hi2c2, (0x68 << 1), 0x1C, 1, &gyroSetting, 1, 100);
+    gyroSetting = 0; // exit from sleep mode
+    HAL_I2C_Mem_Write(&hi2c2, (0x68 << 1), 0x6B, 1, &gyroSetting, 1, 100);
   } else {
-    LCD_DrawString(60, 160, "          ");
-    LCD_DrawString(60, 180, "HAL_NOT_OK");
+    hasIMU = 0;
   }
-  uint8_t gyrosetting = 0b00001000; // accelerometer setting
-  ret = HAL_I2C_Mem_Write(&hi2c2, (0x68 << 1), 0x1C, 1, &gyrosetting, 1, 100);
-  if (ret == HAL_OK) {
-    LCD_DrawString(60, 200, "WRITTEN");
-  } else {
-    LCD_DrawString(60, 220, "HAL_NOT_WRITTEN");
-  }
-  gyrosetting = 0; // exit from sleep mode
-  HAL_I2C_Mem_Write(&hi2c2, (0x68 << 1), 0x6B, 1, &gyrosetting, 1, 100);
 }
 
 void IMU_Start_reading() {
   HAL_I2C_Mem_Read_IT(&hi2c2, (0x68 << 1), 0x3D, 1, IMU_Y_data, 2);
 }
 
-float mpu_readX() {
+float IMU_readX() {
   uint16_t y_axis = ((int16_t)IMU_Y_data[0] << 8) + IMU_Y_data[1];
   float range = 0.0;
   if (y_axis > 18000.0 && y_axis < 58000) {
@@ -47,3 +41,5 @@ float mpu_readX() {
   }
   return range;
 }
+
+int IMU_isReady() { return hasIMU; }

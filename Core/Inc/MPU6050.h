@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+int IMU_isReady();
 void IMU_init();
 float IMU_readX();
 void IMU_Start_reading();

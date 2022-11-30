@@ -166,6 +166,7 @@ void gameTaskFunc(void const *argument) {
   int startHaptic = 0;
   uint32_t startHapticTick = 0;
   TickType_t lastTick = xTaskGetTickCount();
+  int32_t diff;
   // int txFailCount = 0;
   // Game loop
   const float dt = (float)(GAME_UPDATE_RATE_MS) / 1000.0f; // sec
@@ -286,7 +287,13 @@ void gameTaskFunc(void const *argument) {
       HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
     }
 
-    osDelayUntil(&lastTick, GAME_UPDATE_RATE_MS);
+    // osDelayUntil(&lastTick, GAME_UPDATE_RATE_MS);
+    lastTick += pdMS_TO_TICKS(GAME_UPDATE_RATE_MS);
+    if ((diff = lastTick - xTaskGetTickCount()) > 0) {
+      osDelay(diff);
+    } else {
+      lastTick = xTaskGetTickCount();
+    }
   }
   /* USER CODE END gameTaskFunc */
 }
@@ -350,11 +357,10 @@ void uartTaskFunc(void const *argument) {
 void InputTaskFunc(void const *argument) {
   /* USER CODE BEGIN InputTaskFunc */
   /* Infinite loop */
-  TickType_t lastTick = xTaskGetTickCount();
   for (;;) {
     INPUT_loop();
 
-    osDelayUntil(&lastTick, GAME_UPDATE_RATE_MS / 3);
+    osDelay(10);
   }
   /* USER CODE END InputTaskFunc */
 }
